@@ -1,0 +1,105 @@
+* Notation
+We have multiple things that we want to express:
+  1. Each note has a duration and a note
+  2. There can be rests, which are basically empty notes with a
+     duration
+  3. Multiple notes can be played at the same time
+  4. Notes can be played while other notes are still playing
+
+There are two ways to define a notation for that: either with rests or
+without.
+
+  1. With rests, points 1, 2, and 3 are easy to express, but point 4
+     would be cumbersome
+  2. Without rests, we lose the information provided by rests, but all
+     4 points are easy to express. Moreover, the information provided
+     by rest is important in the case of a printed score, but not that
+     much important for an ascii notation if we say at which beat each
+     note starts.
+
+Thus, we will use a notation that says when each note starts, and
+which do not represents rests.
+
+A song is basically a progression of bars. Being able to specify bars
+independently might be interesting, because bars are often
+repeated. This would then avoid having to copy-paste bar
+descriptions. The song would then be represented by a list of bars to
+be played in the order they appear on this list.
+
+Another interesting feature to have is to be able to play a song with
+any instrument we want. Thus, songs that are to be played with
+multiple instruments can be represented by a progression by
+instrument, played at the same time, each with its own instrument.
+
+So, we should be able to define:
+  - Notes, played for a certain duration
+  - Bars, composed of notes played at a certain beat
+  - Progression, composed of bars played one after the other
+  - Songs, composed of multiple progressions each played with a
+    specific instrument
+
+The unit of time is the beat.
+
+A bar can have multiple properties:
+  - A time signature
+  - A tempo
+
+If a bar has a different properties from the previous bars in a
+progression, all the bars played after this bar will also have the new
+properties (except if they expclicitely change them back).
+
+A note will be noted as follow: (for a quarter-note 440-Hz A, in a 4/4
+time signature) :
+#+BEGIN_SRC clojure
+(note :A4 1)
+#+END_SRC
+
+To specify when a note is to be played in a bar, the 'beat' function
+will be called. To simplify common patterns, the functions 'sequence'
+and 'chord' permits to play respectively a sequence of notes (each one
+playing after the previous has ended) and multiple notes in parallel.
+
+A bar will be noted as follows (playing a C-range):
+#+BEGIN_SRC clojure
+(defbar foo {:time-signature [4 4]
+             :bpm 80}
+  (sequence
+    (chord
+      (note :C4 1/2)
+      (note :A4 1/2)
+      (note :G4 1/2))
+    (note :D4 1/2)
+    (note :E4 1/2)
+    (note :F4 1/2)
+    (note :G4 1/2)
+    (note :A4 1/2)
+    (note :B4 1/2)))
+#+END_SRC
+
+A progression is a sequence of chords, where repetitions and change of
+time signature can be specified:
+#+BEGIN_SRC clojure
+(defprog myprog
+  (repeat 2
+    (foo))
+  (set :bpm 90)
+  (repeat 2
+    (foo)))
+#+END_SRC
+
+A song is composed of multiple progressions played at the same time
+with different instruments:
+#+BEGIN_SRC clojure
+(defsong C-range
+  (myprog 'sampled-piano)
+  (myprog 'piano))
+#+END_SRC
+* Internal representation of the notation
+Songs, progressions, bars and notes are simply represented by a
+function that, when called, plays what it represents. Each of these
+functions take the following arguments:
+  - The current state (bpm, time signature)
+  - The time at which it should be played
+  - The instrument it should use
+
+Each function return the time during which it will play (in ms).
