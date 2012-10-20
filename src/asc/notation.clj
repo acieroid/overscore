@@ -1,5 +1,8 @@
 (ns asc.notation
-  (:require [overtone.core]))
+  (:use [overtone.music.rhythm :only [beat-ms]]
+        [overtone.live :only [at]]
+        [overtone.sc.node :only [kill]]
+        [overtone.music.pitch :only [note]]))
 
 (defrecord state [bpm time-signature])
 
@@ -20,7 +23,7 @@
   (fn [state time inst]
     ;; The instrument should take a midi note as input. If it needs a
     ;; frequency, it should use midi->hz to convert it
-    (let [duration-ms (* duration (beat-ms 1 (:bpm state)))]
+    (let [duration-ms (state-beat-time state duration)]
       (at time
           (let [id (inst (note n))]
             (at (+ time duration-ms)
@@ -73,6 +76,10 @@
   ^{:doc "Defines a bar"}
   `(def ~name (bar ~params ~@body)))
 
+(defn repeat-bars [n & bars]
+  ^{:doc "Repeat a set of bars multiple time"}
+  (apply play-seq (flatten (repeat n bars))))
+
 (defmacro prog [& body]
   ^{:doc "Returns a bar, containing bars to be played"}
   `(fn [state# time# inst#]
@@ -99,6 +106,8 @@
 
 ;;; For development/debugging only
 (use 'overtone.inst.synth)
+(use 'overtone.inst.sampled-piano)
+(use 'overtone.music.time)
 (def default-state (->state 80 [4 4]))
 (def default-inst pad)
 (defn test-play [n]
@@ -132,8 +141,8 @@
   (beat 3 (play :E4 1)))
 
 (defprog myprog
-  foo
-  foo)
+  (repeat-bars 2
+          foo))
 
 (defsong C-range
   [myprog sampled-piano]
