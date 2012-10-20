@@ -91,8 +91,8 @@ A song is composed of multiple progressions played at the same time
 with different instruments:
 #+BEGIN_SRC clojure
 (defsong C-range
-  (myprog 'sampled-piano)
-  (myprog 'piano))
+  [myprog sampled-piano]
+  [myprog piano])
 #+END_SRC
 * Internal representation of the notation
 Songs, progressions, bars and notes are simply represented by a

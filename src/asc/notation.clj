@@ -63,6 +63,7 @@
        (state-bar-time state#))))
 
 (defmacro defprog [name & body]
+  ^{:doc "Defines a progression, containing bars to be played"}
   `(def ~name
      (fn [state# time# inst#]
        (reduce
@@ -70,7 +71,16 @@
           (+ t# (n# state# (+ time# t#) inst#)))
         0 (list ~@body)))))
 
-;;; TODO: define defprog, defsong
+(defmacro defsong [name & progs]
+  ^{:doc "Defines a song, containing progressiosn to be played with specific instruments"}
+  `(def ~name
+     (fn [state#]
+       (map (fn [descr#]
+              ;;; descr is composed of [progression instrument]
+              ((first descr#) state# (now) (second descr#)))
+            (list ~@progs)))))
+
+;;; TODO: define anonymous equivalent of defbar, defprog, defsong
 
 ;;; For development/debugging only
 (use 'overtone.inst.synth)
@@ -109,3 +119,7 @@
 (defprog myprog
   foo
   foo)
+
+(defsong C-range
+  [myprog sampled-piano]
+  [myprog pad])
