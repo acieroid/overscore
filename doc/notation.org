@@ -81,10 +81,10 @@ time signature can be specified:
 #+BEGIN_SRC clojure
 (defprog myprog
   (repeat 2
-    (foo))
+    foo)
   (set :bpm 90)
   (repeat 2
-    (foo)))
+    foo))
 #+END_SRC
 
 A song is composed of multiple progressions played at the same time

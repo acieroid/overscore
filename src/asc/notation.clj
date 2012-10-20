@@ -37,7 +37,6 @@
 
 (defn play-seq
   ^{:doc "Return a function that plays multiple notes in sequence"}
-  ([] 0)
   ([& notes]
      (fn [state time inst]
        (reduce
@@ -48,7 +47,9 @@
 (defn beat [n note]
   ^{:doc "Return a function that plays a note at beat n"}
   (fn [state time inst]
-    (note state (+ time (state-beat-time state n)) inst)))
+    (let [delta (state-beat-time state n)]
+      (+ delta
+         (note state (+ time (state-beat-time state n)) inst)))))
 
 ;;; TODO: handle parameters
 (defmacro defbar [name params & body]
@@ -61,7 +62,15 @@
              (list ~@body)))
        (state-bar-time state#))))
 
-;;; TODO: define beat, defprog, defsong
+(defmacro defprog [name & body]
+  `(def ~name
+     (fn [state# time# inst#]
+       (reduce
+        (fn [t# n#]
+          (+ t# (n# state# (+ time# t#) inst#)))
+        0 (list ~@body)))))
+
+;;; TODO: define defprog, defsong
 
 ;;; For development/debugging only
 (use 'overtone.inst.synth)
@@ -88,10 +97,15 @@
    (play :F4 1/2)
    (play :G4 1/2)
    (play :A4 1/2)
-   (play :B4 1/2)))
+   (play :B4 1/2)
+   (play :C5 1/2)))
 
 (defbar foo {}
   (play :C4 1)
   (beat 1 (play :E4 1))
   (beat 2 (play :G4 1))
   (beat 3 (play :E4 1)))
+
+(defprog myprog
+  foo
+  foo)
