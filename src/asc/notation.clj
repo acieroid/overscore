@@ -51,36 +51,51 @@
       (+ delta
          (note state (+ time (state-beat-time state n)) inst)))))
 
-;;; TODO: handle parameters
-(defmacro defbar [name params & body]
-  ^{:doc "Defines a bar, containing notes to be played"}
-  `(def ~name
-     (fn [state# time# inst#]
-       ;; doall is needed because of clojure's lazyness
-       (doall
-        (map (fn [n#] (n# state# time# inst#))
-             (list ~@body)))
-       (state-bar-time state#))))
+;;; Note that bar, prog and song could be defined as functions, but
+;;; defining them as macros permits to redefine the elements they
+;;; depends on, without having to re-eval their definition. For
+;;; example, if progression p contains bar b, when the definition of b
+;;; is modified, p will automatically use the new definition. Having
+;;; those macros as functions, it would be necessary to re-evaluate
+;;; p's definition to have it to use the new b.
 
-(defmacro defprog [name & body]
-  ^{:doc "Defines a progression, containing bars to be played"}
-  `(def ~name
-     (fn [state# time# inst#]
+;;; TODO: handle parameters
+(defmacro bar [params & body]
+  ^{:doc "Returns a bar, containing notes to be played"}
+  `(fn [state# time# inst#]
+     ;; doall is needed because of clojure's lazyness
+     (doall
+      (map (fn [n#] (n# state# time# inst#))
+           (list ~@body)))
+     (state-bar-time state#)))
+
+(defmacro defbar [name params & body]
+  ^{:doc "Defines a bar"}
+  `(def ~name (bar ~params ~@body)))
+
+(defmacro prog [& body]
+  ^{:doc "Returns a bar, containing bars to be played"}
+  `(fn [state# time# inst#]
        (reduce
         (fn [t# n#]
           (+ t# (n# state# (+ time# t#) inst#)))
-        0 (list ~@body)))))
+        0 (list ~@body))))
 
-(defmacro defsong [name & progs]
-  ^{:doc "Defines a song, containing progressiosn to be played with specific instruments"}
-  `(def ~name
-     (fn [state#]
+(defmacro defprog [name & body]
+  ^{:doc "Defines a progression, containing bars to be played"}
+  `(def ~name (prog ~@body)))
+
+(defmacro song [& progs]
+  ^{:doc "Returns a song, containing progressions to be played with specific instruments"}
+  `(fn [state#]
        (map (fn [descr#]
               ;;; descr is composed of [progression instrument]
               ((first descr#) state# (now) (second descr#)))
-            (list ~@progs)))))
+            (list ~@progs))))
 
-;;; TODO: define anonymous equivalent of defbar, defprog, defsong
+(defmacro defsong [name & progs]
+  ^{:doc "Defines a song, containing progressiosn to be played with specific instruments"}
+  `(def ~name (song ~@progs)))
 
 ;;; For development/debugging only
 (use 'overtone.inst.synth)
