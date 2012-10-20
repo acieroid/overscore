@@ -4,9 +4,14 @@
 (defrecord state [bpm time-signature])
 
 ;;; TODO: handle time-signature
-(defn bar-time [state]
-  ^{:doc "Return the duration of a bar in ms, when played with the argument as state"}
+(defn state-bar-time [state]
+  ^{:doc "Return the duration of a bar in ms"}
   (beat-ms 4 (:bpm state)))
+
+;;; TODO: handle time-signature
+(defn state-beat-time [state n]
+  ^{:doc "Return the duration of n beats in ms"}
+  (beat-ms n (:bpm state)))
 
 ;;; TODO: handle time-signature
 (defn play
@@ -40,6 +45,11 @@
           (+ t (n state (+ time t) inst)))
         0 notes))))
 
+(defn beat [n note]
+  ^{:doc "Return a function that plays a note at beat n"}
+  (fn [state time inst]
+    (note state (+ time (state-beat-time state n)) inst)))
+
 ;;; TODO: handle parameters
 (defmacro defbar [name params & body]
   ^{:doc "Defines a bar, containing notes to be played"}
@@ -49,14 +59,16 @@
        (doall
         (map (fn [n#] (n# state# time# inst#))
              (list ~@body)))
-       (bar-time state#))))
+       (state-bar-time state#))))
 
 ;;; TODO: define beat, defprog, defsong
 
 ;;; For development/debugging only
 (use 'overtone.inst.synth)
+(def default-state (->state 80 [4 4]))
+(def default-inst pad)
 (defn test-play [n]
-  (n (state. 80 [4 4]) (now) pad))
+  (n default-state (now) default-inst))
 
 (defbar foo {}
   (play-chord
@@ -64,3 +76,22 @@
    (play :E4 1/2)
    (play :G4 1/2)))
 
+(defbar foo {:time-signature [4 4]
+             :bpm 80}
+  (play-seq
+   (play-chord
+    (play :C4 1/2)
+    (play :E4 1/2)
+    (play :G4 1/2))
+   (play :D4 1/2)
+   (play :E4 1/2)
+   (play :F4 1/2)
+   (play :G4 1/2)
+   (play :A4 1/2)
+   (play :B4 1/2)))
+
+(defbar foo {}
+  (play :C4 1)
+  (beat 1 (play :E4 1))
+  (beat 2 (play :G4 1))
+  (beat 3 (play :E4 1)))
