@@ -1,7 +1,12 @@
 (ns asc.notation
-  (:use [overtone.core]))
+  (:require [overtone.core]))
 
 (defrecord state [bpm time-signature])
+
+;;; TODO: handle time-signature
+(defn bar-time [state]
+  ^{:doc "Return the duration of a bar in ms, when played with the argument as state"}
+  (beat-ms 4 (:bpm state)))
 
 ;;; TODO: handle time-signature
 (defn play
@@ -18,7 +23,7 @@
       duration-ms)))
 
 (defn play-chord
-  ^{:doc "Returns a function that multiple notes at the same time"}
+  ^{:doc "Returns a function that plays multiple notes at the same time"}
   [& notes]
   (fn [state time inst]
     (apply max
@@ -26,7 +31,7 @@
                 notes))))
 
 (defn play-seq
-  ^{:doc "Return a function that play multiple notes in sequence"}
+  ^{:doc "Return a function that plays multiple notes in sequence"}
   ([] 0)
   ([& notes]
      (fn [state time inst]
@@ -35,8 +40,27 @@
           (+ t (n state (+ time t) inst)))
         0 notes))))
 
+;;; TODO: handle parameters
+(defmacro defbar [name params & body]
+  ^{:doc "Defines a bar, containing notes to be played"}
+  `(def ~name
+     (fn [state# time# inst#]
+       ;; doall is needed because of clojure's lazyness
+       (doall
+        (map (fn [n#] (n# state# time# inst#))
+             (list ~@body)))
+       (bar-time state#))))
+
+;;; TODO: define beat, defprog, defsong
+
 ;;; For development/debugging only
 (use 'overtone.inst.synth)
 (defn test-play [n]
   (n (state. 80 [4 4]) (now) pad))
-  
+
+(defbar foo {}
+  (play-chord
+   (play :C4 1/2)
+   (play :E4 1/2)
+   (play :G4 1/2)))
+
