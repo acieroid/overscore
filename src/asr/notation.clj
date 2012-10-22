@@ -52,6 +52,30 @@
        (+ t (n state (+ time t) inst)))
      0 notes)))
 
+(defmacro seq
+  "Simplify the write of multiple notes in sequence. Takes multiple
+notes and duration as arguments. Each time a note is encountered, it
+is added to be played with the current duration. Each time a duration
+is encountered, the current duration is changed to match it. The
+default duration is 1"
+  [& body]
+  (let [notes (reverse
+               (first
+                (reduce
+                 (fn [state elem]
+                   (let [notes (first state)
+                         duration (second state)]
+                     (cond
+                      ;; A note, keep the same duration and play it
+                      (keyword? elem) [(cons `(play ~elem ~duration) notes)
+                                       duration]
+                      ;; A change of duration
+                      (number? elem) [notes elem])))
+                 ;; Default duration is 1
+                 [[] 1]
+                 body)))]
+    `(play-seq ~@notes)))
+
 (defn beat
   "Return a function that plays a note at beat n"
   [n note]
