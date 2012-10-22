@@ -52,7 +52,7 @@
        (+ t (n state (+ time t) inst)))
      0 notes)))
 
-(defmacro seq
+(defmacro simple-seq
   "Simplify the write of multiple notes in sequence. Takes multiple
 notes and duration as arguments. Each time a note is encountered, it
 is added to be played with the current duration. Each time a duration
@@ -107,12 +107,10 @@ default duration is 1"
   [name & body]
   `(def ~name (bar ~@body)))
 
-;; TODO: find a more appropriate name (does not only apply to a bar,
-;; but also to a sequence of notes, ...)
-(defn repeat
+(defn repeat-elements
   "Repeat a set of bars multiple time"
   [n & bars]
-  (apply play-seq (flatten (repeat n bars))))
+  (apply play-seq (flatten (clojure.core/repeat n bars))))
 
 (defmacro prog
   "Returns a bar, containing bars to be played"
@@ -142,3 +140,13 @@ default duration is 1"
   "Defines a song, containing progressiosn to be played with specific instruments"
   [name & progs]
   `(def ~name (song ~@progs)))
+
+(defn start
+  "Start a song."
+  ([song] (song (->state 80 [4 4])))
+  ([song bpm] (song (->state bpm [4 4]))))
+
+(defn start-element
+  "Start an element of a song (progression, bar or note) with a given instrument"
+  ([elem inst] (elem (->state 80 [4 4]) (now) inst))
+  ([elem inst bpm] (elem (->state bpm [4 4]) (now) inst)))
