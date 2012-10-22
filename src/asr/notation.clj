@@ -9,18 +9,20 @@
 (defrecord state [bpm time-signature])
 
 ;;; TODO: handle time-signature
-(defn state-bar-time [state]
-  ^{:doc "Return the duration of a bar in ms"}
+(defn state-bar-time
+  "Return the duration of a bar in ms"
+  [state]
   (beat-ms 4 (:bpm state)))
 
 ;;; TODO: handle time-signature
-(defn state-beat-time [state n]
-  ^{:doc "Return the duration of n beats in ms"}
+(defn state-beat-time
+  "Return the duration of n beats in ms"
+  [state n]
   (beat-ms n (:bpm state)))
 
 ;;; TODO: handle time-signature
 (defn play
-  ^{:doc "Returns a note to be played during a certain duration"}
+  "Returns a note to be played during a certain duration"
   [n duration]
   (fn [state time inst]
     ;; The instrument should take a midi note as input. If it needs a
@@ -34,7 +36,7 @@
       duration-ms)))
 
 (defn play-chord
-  ^{:doc "Returns a function that plays multiple notes at the same time"}
+  "Returns a function that plays multiple notes at the same time"
   [& notes]
   (fn [state time inst]
     (apply max
@@ -42,16 +44,17 @@
                 notes))))
 
 (defn play-seq
-  ^{:doc "Return a function that plays multiple notes in sequence"}
-  ([& notes]
-     (fn [state time inst]
-       (reduce
-        (fn [t n]
-          (+ t (n state (+ time t) inst)))
-        0 notes))))
+  "Return a function that plays multiple notes in sequence"
+  [& notes]
+  (fn [state time inst]
+    (reduce
+     (fn [t n]
+       (+ t (n state (+ time t) inst)))
+     0 notes)))
 
-(defn beat [n note]
-  ^{:doc "Return a function that plays a note at beat n"}
+(defn beat
+  "Return a function that plays a note at beat n"
+  [n note]
   (fn [state time inst]
     (let [delta (state-beat-time state n)]
       (+ delta
@@ -65,9 +68,9 @@
 ;;; those macros as functions, it would be necessary to re-evaluate
 ;;; p's definition to have it to use the new b.
 
-;;; TODO: handle parameters
-(defmacro bar [params & body]
-  ^{:doc "Returns a bar, containing notes to be played"}
+(defmacro bar
+  "Returns a bar, containing notes to be played"
+  [& body]
   `(fn [state# time# inst#]
      ;; doall is needed because of clojure's lazyness
      (doall
@@ -75,30 +78,35 @@
            (list ~@body)))
      (state-bar-time state#)))
 
-(defmacro defbar [name params & body]
-  ^{:doc "Defines a bar"}
-  `(def ~name (bar ~params ~@body)))
+(defmacro defbar
+  "Defines a bar"
+  [name & body]
+  `(def ~name (bar ~@body)))
 
 ;; TODO: find a more appropriate name (does not only apply to a bar,
 ;; but also to a sequence of notes, ...)
-(defn repeat-bars [n & bars]
-  ^{:doc "Repeat a set of bars multiple time"}
+(defn repeat
+  "Repeat a set of bars multiple time"
+  [n & bars]
   (apply play-seq (flatten (repeat n bars))))
 
-(defmacro prog [& body]
-  ^{:doc "Returns a bar, containing bars to be played"}
+(defmacro prog
+  "Returns a bar, containing bars to be played"
+  [& body]
   `(fn [state# time# inst#]
        (reduce
         (fn [t# n#]
           (+ t# (n# state# (+ time# t#) inst#)))
         0 (list ~@body))))
 
-(defmacro defprog [name & body]
-  ^{:doc "Defines a progression, containing bars to be played"}
+(defmacro defprog
+  "Defines a progression, containing bars to be played"
+  [name & body]
   `(def ~name (prog ~@body)))
 
-(defmacro song [& progs]
-  ^{:doc "Returns a song, containing progressions to be played with specific instruments"}
+(defmacro song
+  "Returns a song, containing progressions to be played with specific instruments"
+  [& progs]
   `(fn [state#]
      (let [time# (now)]
        (map (fn [descr#]
@@ -106,6 +114,7 @@
               ((first descr#) state# time# (second descr#)))
             (list ~@progs)))))
 
-(defmacro defsong [name & progs]
-  ^{:doc "Defines a song, containing progressiosn to be played with specific instruments"}
+(defmacro defsong
+  "Defines a song, containing progressiosn to be played with specific instruments"
+  [name & progs]
   `(def ~name (song ~@progs)))
