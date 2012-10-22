@@ -2,8 +2,9 @@
 ;; http://imslp.org/wiki/Cello_Suite_No.1_in_G_major,_BWV_1007_(Bach,_Johann_Sebastian)
 
 ;; Simple and beautiful classical 4/4 song
-(ns asc.examples.cello-suite
-  (:use [asc.notation]))
+(ns asr.examples.cello-suite
+  (:use [asr.notation]
+        [overtone.inst.sampled-piano]))
 
 ;; Avoid having to type (play foo 1/4) for each note
 (defmacro quarter-seq [& notes]
@@ -87,7 +88,10 @@
    :F#3 :D3 :G#3 :D3))
 
 ;;; Entire progression
-(defprog cello-suite
+(defprog cello
   bar1 bar2 bar3
   bar4 bar5 bar6 bar7
   bar8 bar9 bar10 bar11)
+
+(defsong cello-suite
+  [cello sampled-piano])

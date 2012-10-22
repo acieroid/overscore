@@ -1,8 +1,10 @@
-(ns asc.notation
+(ns asr.notation
   (:use [overtone.music.rhythm :only [beat-ms]]
+        [overtone.music.time :only [now]]
         [overtone.live :only [at]]
         [overtone.sc.node :only [kill]]
-        [overtone.music.pitch :only [note]]))
+        [overtone.music.pitch :only [note]]
+        [overtone.sc.server :only [stop]]))
 
 (defrecord state [bpm time-signature])
 

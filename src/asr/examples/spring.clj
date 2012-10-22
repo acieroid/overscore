@@ -1,8 +1,8 @@
 ;;; Score available at
 ;;; http://imslp.org/wiki/Violin_Concerto_in_E_major,_RV_269_(Vivaldi,_Antonio)#Recordings
 
-(ns asc.examples.spring
-  (:use [asc.notation]
+(ns asr.examples.spring
+  (:use [asr.notation]
         [overtone.inst.synth]
         [overtone.inst.sampled-piano]))
 
