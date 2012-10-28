@@ -1,16 +1,11 @@
 (ns asr.generator
   (:use [clojure.java.io]))
 
-(defn note->keyword
-  "Convert a note record to a keyword representing it"
-  [note]
-  (keyword (str (:step note) (:octave note))))
-
 ;;; TODO: use the time signature
 (defn generate-note
   "Generate overtone code for a given note"
   [note]
-  `(~'play ~(note->keyword note) ~(/ (:duration note) 4)))
+  `(~'play ~(:descr note) ~(/ (:duration note) 4)))
 
 (defn generate-measure
   "Generate overtone code for a given measure"
