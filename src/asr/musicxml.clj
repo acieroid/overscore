@@ -12,7 +12,6 @@
   [xml tag]
   (first (filter #(= (:tag %) tag) (:content xml))))
 
-
 (defn is-note
   "Does the XML given as argument represents a note?"
   [xml]
@@ -24,17 +23,14 @@
   (->note (-> xml
               (down-to :pitch)
               (down-to :step)
-              :content
-              first)
+              :content first)
           (-> xml
               (down-to :pitch)
               (down-to :octave)
-              :content
-              first)
+              :content first Integer.)
           (-> xml
               (down-to :duration)
-              :content
-              first)))
+              :content first Double.)))
 
 (defn is-measure
   "Does the XML given as argument represents a measure?"
