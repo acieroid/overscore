@@ -1,5 +1,6 @@
 (ns asr.generator
-  (:use [clojure.java.io]))
+  (:use clojure.java.io
+        clojure.pprint))
 
 ;;; TODO: use the time signature
 (defn generate-note
@@ -7,27 +8,27 @@
   [note]
   `(~'play ~(:descr note) ~(/ (:duration note) 4)))
 
-(defn generate-measure
+(defn generate-bar
   "Generate overtone code for a given measure"
   [measure]
   `(~'bar
     (~'play-seq
      ~@(map generate-note (:notes measure)))))
 
-(defn generate-part
+(defn generate-prog
   "Generate overtone code for a given part"
   [part]
   `(~'defprog ~(symbol (:id part))
-    ~@(map generate-measure (:measures part))))
+    ~@(map generate-bar (:bars part))))
 
 (defn generate-song
   "Generate overtone code for an entire song (ie. a MusicXML file)"
   [song name]
-  `(~@(map generate-part (:parts song))
+  `(~@(map generate-bar (:progs song))
     (~'defsong ~name
       ;;; TODO: find a way to specify instruments ?
       ~@(map (fn [part] [(symbol (:id part)) 'sampled-piano])
-             (:parts song)))))
+             (:progs song)))))
 
 (defn prelude
   "Returns the header of a generated file for the song with a given name"

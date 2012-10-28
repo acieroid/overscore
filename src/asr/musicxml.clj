@@ -1,10 +1,14 @@
+;;; This module parses a MusicXML file and return a structure
+;;; representing it. The MusicXML semantics are described there:
+;;; http://www.makemusic.com/musicxml/specification/dtd/
+
 (ns asr.musicxml
   (:require [clojure.xml :as xml]
             [clojure.zip :as zip]))
 
-(defrecord musicxml-file [parts])
-(defrecord part [id measures])
-(defrecord measure [number notes])
+(defrecord song [parts])
+(defrecord prog [id bars])
+(defrecord bar [number notes])
 (defrecord note [descr duration])
 
 (defn down-to
@@ -45,13 +49,17 @@
       ;; No pitch, so it is a rets
       :rest)))
 
+;;; TODO: use time signature
 (defn parse-note
   "Parse the XML of a note"
-  [xml]
+  [xml divisions]
   (->note (note-descr xml)
           (-> xml
               (down-to :duration)
-              :content first Double.)))
+              :content first Double.
+              ;; Divide the MusicXML duration by the number of
+              ;; divisions to obtain the real duration
+              (/ (* divisions 4)))))
 
 (defn is-measure
   "Does the XML given as argument represents a measure?"
@@ -60,10 +68,20 @@
 
 (defn parse-measure
   "Parse the XML of a measure"
-  [xml]
-  (->measure (Integer. (:number (:attrs xml)))
-             (map parse-note
-                  (filter is-note (:content xml)))))
+  [xml & [divisions]]
+  (let [divs-str (-> xml
+                     (down-to :attributes)
+                     (down-to :divisions)
+                     :content first)
+        divs (if divs-str
+               (Integer. divs-str)
+               (if divisions
+                 divisions
+                 (throw (Throwable. "No division attribute previously defined"))))]
+    (list divs
+     (->bar (Integer. (:number (:attrs xml)))
+            (map #(parse-note % divs)
+                 (filter is-note (:content xml)))))))
 
 (defn is-part
   "Does the XML given as argument represents a part?"
@@ -73,14 +91,16 @@
 (defn parse-part
   "Parse the XML of a part"
   [xml]
-  (->part (:id (:attrs xml))
-          (map parse-measure
-               (filter is-measure (:content xml)))))
+  (->prog (:id (:attrs xml))
+          (second
+           (reduce (fn [st el]
+                     (parse-measure el (first st)))
+                   (filter is-measure (:content xml))))))
 
 (defn parse-musicxml
   "Parse the XML of a MusicXML file into a musicxml-file structure"
   [file]
   (let [xml (xml/parse file)]
-    (->musicxml-file
+    (->song
      (map parse-part
           (filter is-part (:content xml))))))

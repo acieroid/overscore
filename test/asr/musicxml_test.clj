@@ -32,6 +32,28 @@
                      :content [{:tag :step :content ["C"]}
                                {:tag :octave :content ["4"]}]}
                     {:tag :duration
-                     :content ["1.0"]}]})]
+                     :content ["1.0"]}]}
+         1)]
     (is (= (:descr note) :C4))
-    (is (double= (:duration note) 1.0))))
+    (is (double= (:duration note) 1/4))))
+
+(deftest test-parse-measure
+  (let [measure
+        {:tag :measure
+         :attrs {:number "1"}
+         :content
+         [{:tag :attributes
+           :content
+           [{:tag :divisions :content ["4"]}]}
+          {:tag :note
+           :content
+           [{:tag :pitch
+             :content [{:tag :step :content ["C"]}
+                       {:tag :octave :content ["4"]}]}
+            {:tag :duration :content ["1.0"]}]}]}
+        bar (second (parse-measure measure))]
+    (is (= (:number bar) 1))
+    (is (= (:descr (first (:notes bar)))
+           :C4))
+    (is (double= (:duration (first (:notes bar)))
+                 1/16))))
