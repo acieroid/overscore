@@ -49,7 +49,6 @@
       ;; No pitch, so it is a rets
       :rest)))
 
-;;; TODO: use time signature
 (defn parse-note
   "Parse the XML of a note"
   [xml divisions]
@@ -60,7 +59,7 @@
               ;; Divide the MusicXML duration by the number of
               ;; divisions to obtain the real duration
               ;; TODO: converting to a fraction if possible would be neat
-              (/ (* divisions 4)))))
+              (/ divisions))))
 
 (defn is-measure
   "Does the XML given as argument represents a measure?"
@@ -93,11 +92,14 @@
   "Parse the XML of a part"
   [xml]
   (->prog (:id (:attrs xml))
-          (second
-           (reduce (fn [st el]
-                     (parse-measure el (first st)))
-                   nil
-                   (filter is-measure (:content xml))))))
+          (reverse
+           (second
+            (reduce (fn [st el]
+                      (let [res (parse-measure el (first st))]
+                        (list (first res)
+                              (cons (second res) (second st)))))
+                    nil
+                    (filter is-measure (:content xml)))))))
 
 (defn parse-musicxml
   "Parse the XML of a MusicXML file into a musicxml-file structure"
