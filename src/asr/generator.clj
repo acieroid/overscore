@@ -6,7 +6,7 @@
 (defn generate-note
   "Generate overtone code for a given note"
   [note]
-  `(~'play ~(:descr note) ~(/ (:duration note) 4)))
+  `(~'play ~(:descr note) ~(:duration note)))
 
 (defn generate-bar
   "Generate overtone code for a given measure"
@@ -24,10 +24,10 @@
 (defn generate-song
   "Generate overtone code for an entire song (ie. a MusicXML file)"
   [song name]
-  `(~@(map generate-bar (:progs song))
+  `(~@(map generate-prog (:progs song))
     (~'defsong ~name
       ;;; TODO: find a way to specify instruments ?
-      ~@(map (fn [part] [(symbol (:id part)) 'sampled-piano])
+      ~@(map (fn [prog] [(symbol (:id prog)) 'sampled-piano])
              (:progs song)))))
 
 (defn prelude

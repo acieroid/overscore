@@ -6,7 +6,7 @@
   (:require [clojure.xml :as xml]
             [clojure.zip :as zip]))
 
-(defrecord song [parts])
+(defrecord song [progs])
 (defrecord prog [id bars])
 (defrecord bar [number notes])
 (defrecord note [descr duration])
@@ -59,6 +59,7 @@
               :content first Double.
               ;; Divide the MusicXML duration by the number of
               ;; divisions to obtain the real duration
+              ;; TODO: converting to a fraction if possible would be neat
               (/ (* divisions 4)))))
 
 (defn is-measure
@@ -95,6 +96,7 @@
           (second
            (reduce (fn [st el]
                      (parse-measure el (first st)))
+                   nil
                    (filter is-measure (:content xml))))))
 
 (defn parse-musicxml
