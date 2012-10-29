@@ -80,7 +80,9 @@
 (defn reverse-chord
   "Reverse the order of notes in a chord (used to have the notes in the same order as in the MusicXML file)"
   [chord]
-  (->chord (reverse (:notes chord))))
+  (if (= (type chord) asr.musicxml.chord)
+    (->chord (reverse (:notes chord)))
+    chord))
 
 (defn is-chord
   "Is a XML note part of a chord?"
@@ -102,20 +104,21 @@
     (list divs
      (->bar (Integer. (:number (:attrs xml)))
             (reverse
-             (second
+             (apply cons
               (reduce (fn [st el]
-                        (doall (println st))
                         (let [last-note (first st)
                               notes (second st)
                               note (parse-note el divs)]
                           (if (is-chord el)
                             ;; Add this note to the current chord
-                            (list (add-to-chord last-note note)
-                                  notes)
+                            [(add-to-chord last-note note)
+                              notes]
                             ;; Last note wasn't in a chord, push it
-                            (list note
-                                  (cons (reverse-chord last-note) notes)))))
-                      (list nil nil)
+                            [note
+                             (if last-note
+                               (cons (reverse-chord last-note) notes)
+                               notes)])))
+                      [nil nil] ;; Initial state
                       (filter is-note (:content xml)))))))))
 
 (defn is-part
