@@ -74,8 +74,8 @@
     ;; doesn't work with clojure's case
     (cond
      (= t nil) (->chord [note])
-     (= t asr.musicxml.note) (->chord [chord note])
-     (= t asr.musicxml.chord) (->chord (cons (:notes chord) note)))))
+     (= t asr.musicxml.note) (->chord [note chord])
+     (= t asr.musicxml.chord) (->chord (cons note (:notes chord))))))
 
 (defn reverse-chord
   "Reverse the order of notes in a chord (used to have the notes in the same order as in the MusicXML file)"
@@ -88,6 +88,11 @@
   "Is a XML note part of a chord?"
   [xml]
   (down-to xml :chord))
+
+(defn debug
+  [s x]
+  (doall (println (str s ": " x)))
+  x)
 
 (defn parse-measure
   "Parse the XML of a measure"
@@ -103,23 +108,30 @@
                  (throw (Throwable. "No division attribute previously defined"))))]
     (list divs
      (->bar (Integer. (:number (:attrs xml)))
-            (reverse
-             (apply cons
-              (reduce (fn [st el]
-                        (let [last-note (first st)
-                              notes (second st)
-                              note (parse-note el divs)]
-                          (if (is-chord el)
-                            ;; Add this note to the current chord
-                            [(add-to-chord last-note note)
-                              notes]
-                            ;; Last note wasn't in a chord, push it
-                            [note
-                             (if last-note
-                               (cons (reverse-chord last-note) notes)
-                               notes)])))
-                      [nil nil] ;; Initial state
-                      (filter is-note (:content xml)))))))))
+            (let [state
+                  (reduce
+                   (fn [st el]
+                     (println (str "State: " st))
+                     (let [last-note (first st)
+                           notes (second st)
+                           note (parse-note el divs)]
+                       (if (is-chord el)
+                         ;; Add this note to the current chord
+                         (debug "is a chord"
+                           [(add-to-chord last-note note)
+                           notes])
+                         ;; Last note wasn't in the same chord, push it
+                         (debug "not a chord"
+                          [note
+                           (if last-note
+                             (cons (reverse-chord last-note) notes)
+                             notes)]))))
+                          [nil nil] ;; Initial state
+                          (filter is-note (:content xml)))]
+              (doall (println (str "Final state: " state)))
+              (reverse
+               (cons (first state)
+                     (second state))))))))
 
 (defn is-part
   "Does the XML given as argument represents a part?"

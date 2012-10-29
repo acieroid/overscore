@@ -3,7 +3,6 @@
         clojure.pprint
         asr.musicxml))
 
-;;; TODO: use the time signature
 (defn generate-note
   "Generate overtone code for a given note"
   [note]
