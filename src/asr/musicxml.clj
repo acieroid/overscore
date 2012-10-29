@@ -89,11 +89,6 @@
   [xml]
   (down-to xml :chord))
 
-(defn debug
-  [s x]
-  (doall (println (str s ": " x)))
-  x)
-
 (defn parse-measure
   "Parse the XML of a measure"
   [xml & [divisions]]
@@ -111,26 +106,22 @@
             (let [state
                   (reduce
                    (fn [st el]
-                     (println (str "State: " st))
                      (let [last-note (first st)
                            notes (second st)
                            note (parse-note el divs)]
                        (if (is-chord el)
                          ;; Add this note to the current chord
-                         (debug "is a chord"
-                           [(add-to-chord last-note note)
-                           notes])
+                         [(add-to-chord last-note note)
+                          notes]
                          ;; Last note wasn't in the same chord, push it
-                         (debug "not a chord"
-                          [note
-                           (if last-note
-                             (cons (reverse-chord last-note) notes)
-                             notes)]))))
+                         [note
+                          (if last-note
+                            (cons (reverse-chord last-note) notes)
+                            notes)])))
                           [nil nil] ;; Initial state
                           (filter is-note (:content xml)))]
-              (doall (println (str "Final state: " state)))
               (reverse
-               (cons (first state)
+               (cons (reverse-chord (first state))
                      (second state))))))))
 
 (defn is-part
