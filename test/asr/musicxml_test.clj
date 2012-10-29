@@ -19,11 +19,6 @@
                                 {:tag :octave :content ["4"]}
                                 {:tag :alter :content ["1"]}]}]}))))
 
-(defn double=
-  "Test the equality of two doubles"
-  [x y]
-  (< (Math/abs (- x y)) 0.000001))
-
 (deftest test-parse-note
   (let [note
         (parse-note
@@ -32,10 +27,10 @@
                      :content [{:tag :step :content ["C"]}
                                {:tag :octave :content ["4"]}]}
                     {:tag :duration
-                     :content ["1.0"]}]}
-         1)]
+                     :content ["1"]}]}
+         4)]
     (is (= (:descr note) :C4))
-    (is (double= (:duration note) 1/4))))
+    (is (= (:duration note) 1/4))))
 
 (deftest test-parse-measure
   (let [measure
@@ -50,10 +45,43 @@
            [{:tag :pitch
              :content [{:tag :step :content ["C"]}
                        {:tag :octave :content ["4"]}]}
-            {:tag :duration :content ["1.0"]}]}]}
+            {:tag :duration :content ["1"]}]}
+          {:tag :note
+           :content
+           [{:tag :pitch
+             :content [{:tag :step :content ["G"]}
+                       {:tag :octave :content ["3"]}]}
+            {:tag :duration :content ["4"]}]}]}
         bar (second (parse-measure measure))]
     (is (= (:number bar) 1))
-    (is (= (:descr (first (:notes bar)))
-           :C4))
-    (is (double= (:duration (first (:notes bar)))
-                 1/16))))
+    (is (= (first (:notes bar))
+           (->note :C4 1/4)))
+    (is (= (second (:notes bar))
+           (->note :G3 1)))))
+
+(deftest test-parse-measure-chord
+  (let [measure
+        {:tag :measure
+         :attrs {:number "1"}
+         :content
+         [{:tag :attributes
+           :content
+           [{:tag :divisions :content ["4"]}]}
+          {:tag :note
+           :content
+           [{:tag :pitch
+             :content [{:tag :step :content ["C"]}
+                       {:tag :octave :content ["4"]}]}
+            {:tag :duration :content ["1"]}]}
+          {:tag :note
+           :content
+           [{:tag :chord}
+            {:tag :pitch
+             :content [{:tag :step :content ["G"]}
+                       {:tag :octave :content ["3"]}]}
+            {:tag :duration :content ["4"]}]}]}
+        bar (second (parse-measure measure))]
+    (is (= (:number bar) 1))
+    (is (= (first (:notes bar))
+           (->chord [(->note :C4 1/4)
+                     (->note :G3 1)])))))

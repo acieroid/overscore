@@ -1,12 +1,18 @@
 (ns asr.generator
   (:use clojure.java.io
-        clojure.pprint))
+        clojure.pprint
+        asr.musicxml))
 
 ;;; TODO: use the time signature
 (defn generate-note
   "Generate overtone code for a given note"
   [note]
-  `(~'play ~(:descr note) ~(:duration note)))
+  (let [t (type note)]
+    (cond
+     (= t asr.musicxml.note)
+     `(~'play ~(:descr note) ~(:duration note))
+     (= t asr.musicxml.chord)
+     `(~'play-chord ~@(map generate-note (:notes note))))))
 
 (defn generate-bar
   "Generate overtone code for a given measure"

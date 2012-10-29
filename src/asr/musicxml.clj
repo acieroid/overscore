@@ -9,6 +9,7 @@
 (defrecord song [progs])
 (defrecord prog [id bars])
 (defrecord bar [number notes])
+(defrecord chord [notes])
 (defrecord note [descr duration])
 
 (defn down-to
@@ -55,7 +56,7 @@
   (->note (note-descr xml)
           (-> xml
               (down-to :duration)
-              :content first Double.
+              :content first Integer.
               ;; Divide the MusicXML duration by the number of
               ;; divisions to obtain the real duration
               ;; TODO: converting to a fraction if possible would be neat
@@ -65,6 +66,26 @@
   "Does the XML given as argument represents a measure?"
   [xml]
   (= (:tag xml) :measure))
+
+(defn add-to-chord
+  "Add a note to a chord, or build a chord if the first argument is a note (or nil)"
+  [chord note]
+  (let [t (type chord)]
+    ;; doesn't work with clojure's case
+    (cond
+     (= t nil) (->chord [note])
+     (= t asr.musicxml.note) (->chord [chord note])
+     (= t asr.musicxml.chord) (->chord (cons (:notes chord) note)))))
+
+(defn reverse-chord
+  "Reverse the order of notes in a chord (used to have the notes in the same order as in the MusicXML file)"
+  [chord]
+  (->chord (reverse (:notes chord))))
+
+(defn is-chord
+  "Is a XML note part of a chord?"
+  [xml]
+  (down-to xml :chord))
 
 (defn parse-measure
   "Parse the XML of a measure"
@@ -80,8 +101,22 @@
                  (throw (Throwable. "No division attribute previously defined"))))]
     (list divs
      (->bar (Integer. (:number (:attrs xml)))
-            (map #(parse-note % divs)
-                 (filter is-note (:content xml)))))))
+            (reverse
+             (second
+              (reduce (fn [st el]
+                        (doall (println st))
+                        (let [last-note (first st)
+                              notes (second st)
+                              note (parse-note el divs)]
+                          (if (is-chord el)
+                            ;; Add this note to the current chord
+                            (list (add-to-chord last-note note)
+                                  notes)
+                            ;; Last note wasn't in a chord, push it
+                            (list note
+                                  (cons (reverse-chord last-note) notes)))))
+                      (list nil nil)
+                      (filter is-note (:content xml)))))))))
 
 (defn is-part
   "Does the XML given as argument represents a part?"
