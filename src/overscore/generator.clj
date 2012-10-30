@@ -1,16 +1,16 @@
-(ns asr.generator
+(ns overscore.generator
   (:use clojure.java.io
         clojure.pprint
-        asr.musicxml))
+        overscore.musicxml))
 
 (defn generate-note
   "Generate overtone code for a given note"
   [note]
   (let [t (type note)]
     (cond
-     (= t asr.musicxml.note)
+     (= t overscore.musicxml.note)
      `(~'play ~(:descr note) ~(:duration note))
-     (= t asr.musicxml.chord)
+     (= t overscore.musicxml.chord)
      `(~'play-chord ~@(map generate-note (:notes note))))))
 
 (defn generate-bar
@@ -39,7 +39,7 @@
   "Returns the header of a generated file for the song with a given name"
   [name]
   `(~'ns ~name
-     (:use [~'asr.notation]
+     (:use [~'overscore.notation]
            [~'overtone.inst.sampled-piano])))
 
 (defn write-to-file

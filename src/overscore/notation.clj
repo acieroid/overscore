@@ -1,4 +1,4 @@
-(ns asr.notation
+(ns overscore.notation
   (:use [overtone.music.rhythm :only [beat-ms]]
         [overtone.music.time :only [now]]
         [overtone.live :only [at]]

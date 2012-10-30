@@ -1,7 +1,7 @@
-(ns asr.generator-test
+(ns overscore.generator-test
   (:use clojure.test
-        asr.generator
-        asr.musicxml))
+        overscore.generator
+        overscore.musicxml))
 
 (deftest test-generate-note
   (is (= (generate-note (->note :C4 1))

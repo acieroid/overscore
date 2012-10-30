@@ -1,6 +1,6 @@
-(ns asr.musicxml-test
+(ns overscore.musicxml-test
   (:use clojure.test
-        asr.musicxml))
+        overscore.musicxml))
 
 (deftest test-note-descr
   (is (= :C4

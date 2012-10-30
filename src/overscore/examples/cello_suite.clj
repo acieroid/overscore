@@ -2,8 +2,8 @@
 ;; http://imslp.org/wiki/Cello_Suite_No.1_in_G_major,_BWV_1007_(Bach,_Johann_Sebastian)
 
 ;; Simple and beautiful classical 4/4 song
-(ns asr.examples.cello-suite
-  (:use [asr.notation]
+(ns overscore.examples.cello-suite
+  (:use [overscore.notation]
         [overtone.inst.sampled-piano]))
 
 ;;; First staff

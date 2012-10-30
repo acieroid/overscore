@@ -2,7 +2,7 @@
 ;;; representing it. The MusicXML semantics are described there:
 ;;; http://www.makemusic.com/musicxml/specification/dtd/
 
-(ns asr.musicxml
+(ns overscore.musicxml
   (:require [clojure.xml :as xml]
             [clojure.zip :as zip]))
 
@@ -74,13 +74,13 @@
     ;; doesn't work with clojure's case
     (cond
      (= t nil) (->chord [note])
-     (= t asr.musicxml.note) (->chord [note chord])
-     (= t asr.musicxml.chord) (->chord (cons note (:notes chord))))))
+     (= t overscore.musicxml.note) (->chord [note chord])
+     (= t overscore.musicxml.chord) (->chord (cons note (:notes chord))))))
 
 (defn reverse-chord
   "Reverse the order of notes in a chord (used to have the notes in the same order as in the MusicXML file)"
   [chord]
-  (if (= (type chord) asr.musicxml.chord)
+  (if (= (type chord) overscore.musicxml.chord)
     (->chord (reverse (:notes chord)))
     chord))
 
