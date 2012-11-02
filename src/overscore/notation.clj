@@ -7,20 +7,20 @@
         [overtone.sc.server :only [stop]]))
 
 (defrecord state [bpm time-signature])
+(defrecord time-signature [beats note-value])
 
-;;; TODO: handle time-signature
-(defn state-bar-time
-  "Return the duration of a bar in ms"
-  [state]
-  (beat-ms 4 (:bpm state)))
-
-;;; TODO: handle time-signature
 (defn state-beat-time
   "Return the duration of n beats in ms"
   [state n]
-  (beat-ms n (:bpm state)))
+  (beat-ms (* (/ 4 (:note-value (:time-signature state)))
+              n)
+           (:bpm state)))
 
-;;; TODO: handle time-signature
+(defn state-bar-time
+  "Return the duration of a bar in ms"
+  [state]
+  (state-beat-time state (:beats (:time-signature state))))
+
 (defn play
   "Returns a note to be played during a certain duration"
   [n duration]
@@ -143,10 +143,10 @@ default duration is 1"
 
 (defn start
   "Start a song."
-  ([song] (song (->state 80 [4 4])))
-  ([song bpm] (song (->state bpm [4 4]))))
+  ([song] (song (->state 80 (->time-signature 4 4))))
+  ([song bpm] (song (->state bpm (->time-signature 4 4)))))
 
 (defn start-element
   "Start an element of a song (progression, bar or note) with a given instrument"
-  ([elem inst] (elem (->state 80 [4 4]) (now) inst))
-  ([elem inst bpm] (elem (->state bpm [4 4]) (now) inst)))
+  ([elem inst] (elem (->state 80 (->time-signature 4 4)) (now) inst))
+  ([elem inst bpm] (elem (->state bpm (->time-signature 4 4)) (now) inst)))
