@@ -6,7 +6,7 @@
   (:require [clojure.xml :as xml]
             [clojure.zip :as zip]))
 
-(defrecord song [progs])
+(defrecord song [time-signature tempo progs])
 (defrecord prog [id bars])
 (defrecord bar [number notes])
 (defrecord chord [notes])
@@ -142,10 +142,48 @@
                     nil
                     (filter is-measure (:content xml)))))))
 
+(defn parse-time-signature
+  "Return the first time signature of the song"
+  [xml]
+  ;; The first time signature has to be in the first measure
+  ;; (otherwise what would be its time signature?)
+  (let [time (-> xml
+                 (down-to :part)
+                 (down-to :measure)
+                 (down-to :time)
+                 :content)]
+    (if time
+      (seq
+       (-> time
+           (down-to :beats)
+           :content first Integer.)
+       (-> time
+           (down-to :beat-type)
+           :content first Integer.))
+      ;; defaults to 4-4 (common time)
+      [4 4])))
+
+(defn parse-tempo
+  "Return the first tempo of the song"
+  [xml]
+  ;; Same remark as for parse-time-signature
+  (let [tempo (-> xml
+                  (down-to :part)
+                  (down-to :measure)
+                  (down-to :direction)
+                  (down-to :sound)
+                  :attributes :tempo)]
+    (if tempo
+      (int (Double. tempo))
+      ;; defaults to 80 bpm
+      80)))
+
 (defn parse-musicxml
   "Parse the XML of a MusicXML file into a musicxml-file structure"
   [file]
   (let [xml (xml/parse file)]
     (->song
+     (parse-time-signature (:content xml))
+     (parse-tempo (:content xml))
      (map parse-part
           (filter is-part (:content xml))))))

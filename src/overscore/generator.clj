@@ -30,7 +30,8 @@
   "Generate overtone code for an entire song (ie. a MusicXML file)"
   [song name]
   `(~@(map generate-prog (:progs song))
-    (~'defsong ~name
+    (~'defsong ~name {:time-signature ~(:time-signature song)
+                      :tempo ~(:tempo song)}
       ;;; TODO: find a way to specify instruments ?
       ~@(map (fn [prog] [(symbol (:id prog)) 'sampled-piano])
              (:progs song)))))
