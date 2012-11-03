@@ -94,6 +94,8 @@
 
 ;;; Full song
 (defsong vivaldi
+  {:time-signature [4 4]
+   :tempo 65}
   [main-violin pad]
   [first-violin pad]
   [second-violin pad])

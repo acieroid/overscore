@@ -89,4 +89,6 @@
   bar8 bar9 bar10 bar11)
 
 (defsong cello-suite
+  {:time-signature [4 4]
+   :tempo 60}
   [cello sampled-piano])

@@ -6,15 +6,25 @@
         [overtone.music.pitch :only [note]]
         [overtone.sc.server :only [stop]]))
 
-(defrecord state [bpm time-signature])
+(defrecord state [tempo time-signature])
 (defrecord time-signature [beats note-value])
+
+(defn map-to-state
+  "Convert a map like {:time-signature [4 4] :tempo 80} to a state record"
+  [m]
+  (let [time-signature (or (:time-signature m)
+                           [4 4])
+        tempo (or (:tempo m)
+                80)]
+    (->state tempo (->time-signature (first time-signature)
+                                     (second time-signature)))))
 
 (defn state-beat-time
   "Return the duration of n beats in ms"
   [state n]
   (beat-ms (* (/ 4 (:note-value (:time-signature state)))
               n)
-           (:bpm state)))
+           (:tempo state)))
 
 (defn state-bar-time
   "Return the duration of a bar in ms"
@@ -128,9 +138,10 @@ default duration is 1"
 
 (defmacro song
   "Returns a song, containing progressions to be played with specific instruments"
-  [& progs]
-  `(fn [state#]
-     (let [time# (now)]
+  [state & progs]
+  `(fn []
+     (let [time# (now)
+           state# (map-to-state ~state)]
        (map (fn [descr#]
               ;;; descr is composed of [progression instrument]
               ((first descr#) state# time# (second descr#)))
@@ -138,15 +149,21 @@ default duration is 1"
 
 (defmacro defsong
   "Defines a song, containing progressiosn to be played with specific instruments"
-  [name & progs]
-  `(def ~name (song ~@progs)))
+  [name state & progs]
+  `(def ~name (song ~state ~@progs)))
 
 (defn start
   "Start a song."
-  ([song] (song (->state 80 (->time-signature 4 4))))
-  ([song bpm] (song (->state bpm (->time-signature 4 4)))))
+  [name] (name))
 
 (defn start-element
   "Start an element of a song (progression, bar or note) with a given instrument"
-  ([elem inst] (elem (->state 80 (->time-signature 4 4)) (now) inst))
-  ([elem inst bpm] (elem (->state bpm (->time-signature 4 4)) (now) inst)))
+  ([elem inst] (start-element inst 80))
+  ([elem inst tempo] (start-element inst tempo [4 4]))
+  ([elem inst tempo ts] (elem
+                       (->state
+                        tempo
+                        (->time-signature (first ts)
+                                          (second ts)))
+                       (now)
+                       inst)))
