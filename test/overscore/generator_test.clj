@@ -47,7 +47,7 @@
               (play :C4 1)))))))
 
 (deftest test-generate-song
-  (is (= (generate-song (->song
+  (is (= (generate-song (->song [4 4] 80
                          (list
                           (->prog
                            "P1"
@@ -62,4 +62,6 @@
               (play-seq
                (play :C4 1))))
            (defsong foo
+             {:time-signature [4 4]
+              :tempo 80}
              [P1 sampled-piano])))))

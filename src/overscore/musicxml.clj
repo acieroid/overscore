@@ -12,6 +12,20 @@
 (defrecord chord [notes])
 (defrecord note [descr duration])
 
+;; TODO: default value when n is nil ?
+(defn parse-int
+  "Parse an integer, possibly from a floating-point representation"
+  [n]
+  (try
+    (int (Double. n))
+    (catch Exception e
+      (println "Error when parsing integer from" n ":" e))))
+
+(defn first-elem-as-int
+  "Return the firts element of the :contents attribute as an integer"
+  [x] (-> x
+          :content first parse-int))
+
 (defn down-to
   "Similar to zip/down, but goes to a labelled node"
   [xml tag]
@@ -34,7 +48,7 @@
                     (if (down-to pitch :alter)
                       (let [alter (-> pitch
                                       (down-to :alter)
-                                      :content first Integer.)]
+                                      first-elem-as-int)]
                         (case alter
                           1 "#"
                           -1 "b"
@@ -46,7 +60,7 @@
                     (-> xml
                         (down-to :pitch)
                         (down-to :octave)
-                        :content first Integer.)))
+                        first-elem-as-int)))
       ;; No pitch, so it is a rets
       :rest)))
 
@@ -56,10 +70,9 @@
   (->note (note-descr xml)
           (-> xml
               (down-to :duration)
-              :content first Integer.
+              first-elem-as-int
               ;; Divide the MusicXML duration by the number of
               ;; divisions to obtain the real duration
-              ;; TODO: converting to a fraction if possible would be neat
               (/ divisions))))
 
 (defn is-measure
@@ -97,12 +110,12 @@
                      (down-to :divisions)
                      :content first)
         divs (if divs-str
-               (Integer. divs-str)
+               (parse-int divs-str)
                (if divisions
                  divisions
                  (throw (Throwable. "No division attribute previously defined"))))]
     (list divs
-     (->bar (Integer. (:number (:attrs xml)))
+     (->bar (parse-int (:number (:attrs xml)))
             (let [state
                   (reduce
                    (fn [st el]
@@ -156,10 +169,10 @@
       (seq
        (-> time
            (down-to :beats)
-           :content first Integer.)
+           first-elem-as-int)
        (-> time
            (down-to :beat-type)
-           :content first Integer.))
+           first-elem-as-int))
       ;; defaults to 4-4 (common time)
       [4 4])))
 
@@ -174,7 +187,7 @@
                   (down-to :sound)
                   :attributes :tempo)]
     (if tempo
-      (int (Double. tempo))
+      (parse-int tempo)
       ;; defaults to 80 bpm
       80)))
 
