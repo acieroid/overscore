@@ -80,22 +80,28 @@
   [xml]
   (= (:tag xml) :measure))
 
-(defn add-to-chord
-  "Add a note to a chord, or build a chord if the first argument is a note (or nil)"
-  [chord note]
-  (let [t (type chord)]
-    ;; doesn't work with clojure's case
-    (cond
-     (= t nil) (->chord [note])
-     (= t overscore.musicxml.note) (->chord [note chord])
-     (= t overscore.musicxml.chord) (->chord (cons note (:notes chord))))))
+(defmulti add-to-chord
+  "Add a note to a chord, or build a chord from two notes"
+  ;; Same ugly hack as for generator's generate-note
+  (fn [chord _] (str (class chord))))
 
-(defn reverse-chord
+(defmethod add-to-chord "" [_ note]
+  (->chord [note]))
+
+(defmethod add-to-chord "class overscore.musicxml.note" [n1 n2]
+  (->chord [n2 n1]))
+
+(defmethod add-to-chord "class overscore.musicxml.chord" [chord note]
+  (->chord (cons note (:notes chord))))
+
+(defmulti reverse-chord
   "Reverse the order of notes in a chord (used to have the notes in the same order as in the MusicXML file)"
-  [chord]
-  (if (= (type chord) overscore.musicxml.chord)
-    (->chord (reverse (:notes chord)))
-    chord))
+  (fn [chord] (str (class chord))))
+
+(defmethod reverse-chord "" [c] c)
+(defmethod reverse-chord "class overscore.musicxml.note" [note] note)
+(defmethod reverse-chord "class overscore.musicxml.chord" [chord]
+  (->chord (reverse (:notes chord))))
 
 (defn is-chord
   "Is a XML note part of a chord?"

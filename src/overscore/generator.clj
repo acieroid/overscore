@@ -6,8 +6,11 @@
 (defmulti generate-note
   "Generate overtone code for a given note or chord"
   ;; Don't know why but class dispatch doesn't seem to work. So we use
-  ;; a ugly hack to have somithing similar
-  (fn [x] (str (class x))))
+  ;; a ugly hack to have somithing similar. To solve the problem, we
+  ;; should have (= (class (->note :C4 1)) overscore.musicxml.note)
+  ;; that returns true, but it isn't the case (but it was the case
+  ;; before...)
+  (fn [note] (str (class note))))
 
 (defmethod generate-note "class overscore.musicxml.note" [n]
   `(~'play ~(:descr n) ~(:duration n)))
