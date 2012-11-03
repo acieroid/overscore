@@ -3,15 +3,17 @@
         clojure.pprint
         overscore.musicxml))
 
-(defn generate-note
-  "Generate overtone code for a given note"
-  [note]
-  (let [t (type note)]
-    (cond
-     (= t overscore.musicxml.note)
-     `(~'play ~(:descr note) ~(:duration note))
-     (= t overscore.musicxml.chord)
-     `(~'play-chord ~@(map generate-note (:notes note))))))
+(defmulti generate-note
+  "Generate overtone code for a given note or chord"
+  ;; Don't know why but class dispatch doesn't seem to work. So we use
+  ;; a ugly hack to have somithing similar
+  (fn [x] (str (class x))))
+
+(defmethod generate-note "class overscore.musicxml.note" [n]
+  `(~'play ~(:descr n) ~(:duration n)))
+
+(defmethod generate-note "class overscore.musicxml.chord" [c]
+  `(~'play-chord ~@(map generate-note (:notes c))))
 
 (defn generate-bar
   "Generate overtone code for a given measure"
@@ -32,7 +34,6 @@
   `(~@(map generate-prog (:progs song))
     (~'defsong ~name {:time-signature ~(:time-signature song)
                       :tempo ~(:tempo song)}
-      ;;; TODO: find a way to specify instruments ?
       ~@(map (fn [prog] [(symbol (:id prog)) 'sampled-piano])
              (:progs song)))))
 
