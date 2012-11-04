@@ -121,6 +121,86 @@
                      (->note :A4 1)
                      (->note :G4 1)])))))
 
+(deftest test-parse-measure-2-voices
+  (let [measure
+        {:tag :measure
+         :attrs {:number "1"}
+         :content
+         [{:tag :attributes
+           :content
+           [{:tag :divisions :content ["1"]}]}
+          {:tag :note
+           :content
+           [{:tag :pitch
+             :content [{:tag :step :content ["C"]}
+                       {:tag :octave :content ["4"]}]}
+            {:tag :duration :content ["1"]}
+            {:tag :voice :content ["1"]}]}
+          {:tag :note
+           :content
+           [{:tag :pitch
+             :content [{:tag :step :content ["A"]}
+                       {:tag :octave :content ["4"]}]}
+            {:tag :duration :content ["1"]}
+            {:tag :voice :content ["2"]}]}]}
+        bar (second (parse-measure measure))]
+    (is (= (count (:notes bar)) 1))
+    (is (= (first (:notes bar))
+           (->chord [(->note :C4 1)
+                     (->note :A4 1)])))))
+
+(deftest test-parse-measure-2-voices-3-notes
+  (let [measure
+        {:tag :measure
+         :attrs {:number "1"}
+         :content
+         [{:tag :attributes
+           :content
+           [{:tag :divisions :content ["1"]}]}
+          {:tag :note
+           :content
+           [{:tag :pitch
+             :content [{:tag :step :content ["C"]}
+                       {:tag :octave :content ["4"]}]}
+            {:tag :duration :content ["1"]}
+            {:tag :voice :content ["1"]}]}
+          {:tag :note
+           :content
+           [{:tag :pitch
+             :content [{:tag :step :content ["G"]}
+                       {:tag :octave :content ["4"]}]}
+            {:tag :duration :content ["1"]}
+            {:tag :voice :content ["1"]}]}
+          {:tag :note
+           :content
+           [{:tag :pitch
+             :content [{:tag :step :content ["A"]}
+                       {:tag :octave :content ["4"]}]}
+            {:tag :duration :content ["1"]}
+            {:tag :voice :content ["2"]}]}]}
+        bar (second (parse-measure measure))]
+    (is (= (count (:notes bar)) 1))
+    (is (= (first (:notes bar))
+           (->chord [(->note-seq
+                      [(->note :C4 1)
+                       (->note :G4 1)])
+                     (->note :A4 1)])))))
+
+(deftest test-group-by-voice
+  (let [notes [{:tag :note
+                :content
+                [{:tag :voice :content ["1"]}]}
+               {:tag :note
+                :content
+                [{:tag :voice :content ["1"]}]}
+               {:tag :note
+                :content
+                [{:tag :voice :content ["2"]}]}]
+        grouped (group-by-voice notes)]
+    (is (= (count grouped) 2))
+    (is (= (count (first grouped)) 2))
+    (is (= (count (second grouped)) 1))))
+
 (deftest test-add-to-chord-and-reverse
   (is (= (-> nil
              (add-to-chord (->note :C4 1))

@@ -10,6 +10,7 @@
 (defrecord prog [id bars])
 (defrecord bar [number notes])
 (defrecord chord [notes])
+(defrecord note-seq [notes])
 (defrecord note [descr duration])
 
 ;; TODO: default value when n is nil ?
@@ -108,6 +109,45 @@
   [xml]
   (down-to xml :chord))
 
+(defn parse-measure-helper [notes divs]
+  (let [state
+        (reduce
+         (fn [st el]
+           (let [last-note (first st)
+                 notes (second st)
+                 note (parse-note el divs)]
+             (if (is-chord el)
+               ;; Add this note to the current chord
+               [(add-to-chord last-note note)
+                notes]
+               ;; Last note wasn't in the same chord, push it
+               [note
+                (if last-note
+                  (cons (reverse-chord last-note) notes)
+                  notes)])))
+         [nil nil] ;; Initial state
+         notes)]
+    (reverse
+     (cons (reverse-chord (first state))
+           (second state)))))
+
+(defn group-by-voice
+  "Group the notes by voice"
+  [notes]
+  (map second
+       (group-by (fn [xml]
+                   (-> xml
+                       (down-to :voice)
+                       :content first))
+                 notes)))
+
+(defn to-seq-if-multiple
+  "Convert a group of note to a note-seq if there are more than one note, else return the only note"
+  [notes]
+  (if (= (count notes) 1)
+    (first notes)
+    (->note-seq notes)))
+
 (defn parse-measure
   "Parse the XML of a measure"
   [xml & [divisions]]
@@ -121,27 +161,15 @@
                  divisions
                  (throw (Throwable. "No division attribute previously defined"))))]
     (list divs
-     (->bar (parse-int (:number (:attrs xml)))
-            (let [state
-                  (reduce
-                   (fn [st el]
-                     (let [last-note (first st)
-                           notes (second st)
-                           note (parse-note el divs)]
-                       (if (is-chord el)
-                         ;; Add this note to the current chord
-                         [(add-to-chord last-note note)
-                          notes]
-                         ;; Last note wasn't in the same chord, push it
-                         [note
-                          (if last-note
-                            (cons (reverse-chord last-note) notes)
-                            notes)])))
-                          [nil nil] ;; Initial state
-                          (filter is-note (:content xml)))]
-              (reverse
-               (cons (reverse-chord (first state))
-                     (second state))))))))
+          (let [voices
+                (map #(parse-measure-helper % divs)
+                     (group-by-voice (filter is-note (:content xml))))]
+            (->bar (parse-int (:number (:attrs xml)))
+                   (if (== (count voices) 1)
+                     ;; Only one voice, no "main" chord
+                     (first voices)
+                     ;; More than one voice, use a chord
+                     [(->chord (map to-seq-if-multiple voices))]))))))
 
 (defn is-part
   "Does the XML given as argument represents a part?"
