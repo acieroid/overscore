@@ -1,40 +1,30 @@
+#+TITLE: Overscore -- Description of the notation
+#+AUTHOR: Quentin \textsc{Stievenart}
+#+LATEX_HEADER: \usepackage[pdftex]{hyperref}
+#+LATEX_HEADER: \hypersetup{colorlinks,citecolor=black,filecolor=black,linkcolor=black,urlcolor=black}
 * Notation
-We have multiple things that we want to express:
-  1. Each note has a duration and a note
+Classical notation express multiple things:
+  1. Each note has a duration and a pitch
   2. There can be rests, which are basically empty notes with a
-     duration
-  3. Multiple notes can be played at the same time
+     certain duration
+  3. Multiple notes can be played at the same time, in a chord
   4. Notes can be played while other notes are still playing
 
-There are two ways to define a notation for that: either with rests or
-without.
+A song consists of a progression of bars (also called
+measures). Being able to specify bars independently might be
+interesting, because bars are often repeated. This would then avoid
+having to copy-paste bar descriptions. The song would then be
+represented by a list of bars to be played in the order they appear in
+this list.
 
-  1. With rests, points 1, 2, and 3 are easy to express, but point 4
-     would be cumbersome
-  2. Without rests, we lose the information provided by rests, but all
-     4 points are easy to express. Moreover, the information provided
-     by rest is important in the case of a printed score, but not that
-     much important for an ascii notation if we say at which beat each
-     note starts.
+So, songs consist of a list of progressions, each one played with a
+specific instruments. This allows the system to play complex songs
+with multiple instruments, as it is often the case in classical music.
 
-Thus, we will use a notation that says when each note starts, and
-which do not represents rests.
-
-A song is basically a progression of bars. Being able to specify bars
-independently might be interesting, because bars are often
-repeated. This would then avoid having to copy-paste bar
-descriptions. The song would then be represented by a list of bars to
-be played in the order they appear on this list.
-
-Another interesting feature to have is to be able to play a song with
-any instrument we want. Thus, songs that are to be played with
-multiple instruments can be represented by a progression by
-instrument, played at the same time, each with its own instrument.
-
-So, we should be able to define:
-  - Notes, played for a certain duration
+So, the notation needs:
+  - Notes, played for a certain duration with a certain pitch
   - Bars, composed of notes played at a certain beat
-  - Progression, composed of bars played one after the other
+  - Progressions, composed of bars played one after the other
   - Songs, composed of multiple progressions each played with a
     specific instrument
 
@@ -44,62 +34,104 @@ A bar can have multiple properties:
   - A time signature
   - A tempo
 
-If a bar has a different properties from the previous bars in a
-progression, all the bars played after this bar will also have the new
-properties (except if they expclicitely change them back).
+During the same song, a bar might change its tempo or time signature
+from the previous bars, but it is not common in classical music (no
+examples could be found). The notation is easily extensible to allow
+it if needed.
 
-A note will be noted as follow: (for a quarter-note 440-Hz A, in a 4/4
-time signature) :
+** Notes
+A note will be noted as follow (for a quarter-note 440-Hz A (4th octave))[fn:1]:
 #+BEGIN_SRC clojure
-(note :A4 1)
+(play :A4 1)
 #+END_SRC
 
-To specify when a note is to be played in a bar, the 'beat' function
-will be called. To simplify common patterns, the functions 'sequence'
-and 'chord' permits to play respectively a sequence of notes (each one
-playing after the previous has ended) and multiple notes in parallel.
+[fn:1] The note pitch is noted as the symbol made of the
+concatenation of the note itself, in conventional english notation,
+and the octave.
 
-A bar will be noted as follows (playing a C-range):
+** Bars
+To specify when a note is to be played in a bar, the =beat= function
+will be called. To simplify common patterns, the functions =play-seq=
+and =play-chord= permits to play respectively a sequence of notes
+(each one playing after the previous has ended) and multiple notes in
+parallel.
+
+In most songs, notes are played in sequence, and those songs do not
+need complex time handling features. Thus, most of the time a bar will
+consists of notes enclosed in a =play-seq=. The macro =simple-seq=
+simplifies the notation for long sequences of note, when no chord is
+present in the sequence.
+
+As an example, all the following bars are equivalent:
 #+BEGIN_SRC clojure
-(defbar foo {:time-signature [4 4]
-             :bpm 80}
-  (sequence
-    (chord
-      (note :C4 1/2)
-      (note :E4 1/2)
-      (note :G4 1/2))
-    (note :D4 1/2)
-    (note :E4 1/2)
-    (note :F4 1/2)
-    (note :G4 1/2)
-    (note :A4 1/2)
-    (note :B4 1/2)))
+(defbar foo-basic
+  (beat 1 (play :C4 1))
+  (beat 2 (play :A4 1))
+  (beat 3 (play :G4 1))
+  (beat 4 (play :C5 1)))
+
+(defbar foo-seq
+  (play-seq
+    (play :C4 1)
+    (play :A4 1)
+    (play :G4 1)
+    (play :C5 1)))
+
+(defbar foo-simple-seq
+  (simple-seq 1
+    :C4 :A4 :G4 :C5))
 #+END_SRC
 
-A progression is a sequence of chords, where repetitions and change of
-time signature can be specified:
+** Progressions
+A progression is a sequence of bars, where repetitions can be specified:
 #+BEGIN_SRC clojure
 (defprog myprog
-  (repeat 2
-    foo)
-  (set :bpm 90)
-  (repeat 2
-    foo))
+  (repeat-element 2
+    foo-basic))
 #+END_SRC
 
+** Song
 A song is composed of multiple progressions played at the same time
-with different instruments:
+with different instruments. It also has a time signature and a tempo
 #+BEGIN_SRC clojure
-(defsong C-range
+(defsong mysong
+  {:time-signature [4 4]
+   :tempo 80}
   [myprog sampled-piano]
-  [myprog piano])
+  [myprog pad])
 #+END_SRC
-* Internal representation of the notation
-Songs, progressions, bars and notes are simply represented by a
+
+** Playing something
+The =start= function is used to play a song:
+
+#+BEGIN_SRC clojure
+(start mysong)
+#+END_SRC
+
+To play a note, a bar or a progression, a instrument should be
+specified, and the function =start-element= is used. This is useful
+when debugging a song:
+
+#+BEGIN_SRC clojure
+(start-element foo-basic sampled-piano)
+#+END_SRC
+
+=start-element= also takes an optional tempo and time-signature as arguments.
+* Internal representation
+Progressions, bars and notes are simply represented by a
 function that, when called, plays what it represents. Each of these
 functions take the following arguments:
-  - The current state (bpm, time signature)
+  - The current state (that contains the current tempo and the time signature)
   - The time at which it should be played
   - The instrument it should use
 
-Each function return the time during which it will play (in ms).
+Each function returns the time during which it will play (in ms).
+
+This allows easy manipulation of such elements in Clojure. Also, since
+all those elements share the same representation, functions like
+=repeat-element= are valid for notes, bars and progressions, and
+functions like =play-chord= could be used to play multiple bars at the
+same time in a progression.
+
+Songs are represented as functions that does not take any arguments,
+and play its content when called.
