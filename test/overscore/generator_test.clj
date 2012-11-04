@@ -33,6 +33,28 @@
             (play :G4 1)
             (play :C4 1))))))
 
+(deftest test-generate-bar-with-voices
+  (is (= (generate-bar
+          (->bar
+           1
+           [(->chord
+             [(->note-seq [(->note :F4 1)
+                           (->note :D4 1)
+                           (->note :F4 1)])
+              (->note-seq [(->note :F5 1)
+                           (->note :D5 1)
+                           (->note :F5 1)])])]))
+         '(bar
+           (play-chord
+            (play-seq
+             (play :F4 1)
+             (play :D4 1)
+             (play :F4 1))
+            (play-seq
+             (play :F5 1)
+             (play :D5 1)
+             (play :F5 1)))))))
+
 (deftest test-generate-prog
   (is (= (generate-prog (->prog
                          "P1"
@@ -43,8 +65,7 @@
                             (->note :C4 1))))))
          '(defprog P1
             (bar
-             (play-seq
-              (play :C4 1)))))))
+             (play :C4 1))))))
 
 (deftest test-generate-song
   (is (= (generate-song (->song [4 4] 80
@@ -59,8 +80,7 @@
                         'foo)
          '((defprog P1
              (bar
-              (play-seq
-               (play :C4 1))))
+              (play :C4 1)))
            (defsong foo
              {:time-signature [4 4]
               :tempo 80}

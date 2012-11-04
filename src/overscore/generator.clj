@@ -18,12 +18,17 @@
 (defmethod generate-note "class overscore.musicxml.chord" [c]
   `(~'play-chord ~@(map generate-note (:notes c))))
 
+(defmethod generate-note "class overscore.musicxml.note-seq" [s]
+  `(~'play-seq ~@(map generate-note (:notes s))))
+
 (defn generate-bar
   "Generate overtone code for a given measure"
   [measure]
   `(~'bar
-    (~'play-seq
-     ~@(map generate-note (:notes measure)))))
+    ~(if (= (count (:notes measure)) 1)
+       (generate-note (first (:notes measure)))
+       `(~'play-seq
+         ~@(map generate-note (:notes measure))))))
 
 (defn generate-prog
   "Generate overtone code for a given part"
