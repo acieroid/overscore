@@ -191,6 +191,11 @@
                     nil
                     (filter is-measure (:content xml)))))))
 
+(defmacro debug [msg expr]
+  `(let [res# ~expr]
+     (doall (println ~msg res#))
+     res#))
+
 (defn parse-time-signature
   "Return the first time signature of the song"
   [xml]
@@ -200,18 +205,17 @@
                  (down-to :part)
                  (down-to :measure)
                  (down-to :attributes)
-                 (down-to :time)
-                 :content)]
+                 (down-to :time))]
     (if time
-      (seq
-       (-> time
+      [(-> time
            (down-to :beats)
            first-elem-as-int)
-       (-> time
-           (down-to :beat-type)
-           first-elem-as-int))
+       (debug "beat-type"
+              (-> time
+                  (down-to :beat-type)
+                  first-elem-as-int))]
       ;; defaults to 4-4 (common time)
-      [4 4])))
+      (debug "default" [4 4]))))
 
 (defn parse-tempo
   "Return the first tempo of the song"
@@ -233,7 +237,7 @@
   [file]
   (let [xml (xml/parse file)]
     (->song
-     (parse-time-signature (:content xml))
-     (parse-tempo (:content xml))
+     (parse-time-signature xml)
+     (parse-tempo xml)
      (map parse-part
           (filter is-part (:content xml))))))

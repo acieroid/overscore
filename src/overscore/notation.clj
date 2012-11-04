@@ -29,7 +29,11 @@
 (defn state-bar-time
   "Return the duration of a bar in ms"
   [state]
-  (state-beat-time state (:beats (:time-signature state))))
+  (state-beat-time state
+                   ;; Not exactly sure about this, but it seems to
+                   ;; work well
+                   (* (/ 4 (:note-value (:time-signature state)))
+                      (:beats (:time-signature state)))))
 
 (defn play
   "Returns a note to be played during a certain duration"
