@@ -35,7 +35,9 @@
 (defn is-note
   "Does the XML given as argument represents a note?"
   [xml]
-  (= (:tag xml) :note))
+  (and (= (:tag xml) :note)
+       ;; Grace notes are just ornaments, not actual notes
+       (= nil (down-to xml :grace))))
 
 (defn note-descr
   "Return the description of a note. Eg. for a G on the second octave, :G2. For a rest, :rest"
@@ -197,6 +199,7 @@
   (let [time (-> xml
                  (down-to :part)
                  (down-to :measure)
+                 (down-to :attributes)
                  (down-to :time)
                  :content)]
     (if time

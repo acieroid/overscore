@@ -219,3 +219,16 @@
          (->chord [(->note :C4 1)
                    (->note :A4 1)
                    (->note :G4 1)]))))
+
+(deftest test-parse-time-signature
+  (is (= (parse-time-signature
+          {:tag :score-partwise
+           :content
+           [{:tag :part
+             :content
+             [{:tag :attributes
+               :content
+               [{:tag :time
+                 :content
+                 [{:tag :beats :content ["3"]}
+                  {:tag :beat-type :content ["8"]}]}]}]}]}))))
