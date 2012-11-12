@@ -143,7 +143,6 @@ default duration is 1"
   `(fn [state# time# inst#]
        (reduce
         (fn [[cur-state# t#] n#]
-          (doall (println cur-state# t#))
           (if (= (type n#) clojure.lang.PersistentArrayMap)
             ;; Modify the state and don't play anything
             [(update-state cur-state# n#) t#]

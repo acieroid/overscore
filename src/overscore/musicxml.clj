@@ -173,7 +173,7 @@
         tempo (if tempo-str
                 (parse-int tempo-str)
                 nil)]
-    (if (and time-signature tempo)
+    (if (or time-signature tempo)
       (->state-change time-signature tempo)
       nil)))
 
