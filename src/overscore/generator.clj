@@ -24,12 +24,12 @@
 (defn generate-state-change
   "Generate a map that represent a change of state (time signature, tempo)"
   [state-change]
-  `(hash-map
-    ~@(concat
-       (when (:time-signature state-change)
-         [:time-signature (:time-signature state-change)])
-       (when (:tempo state-change)
-         [:tempo (:tempo state-change)]))))
+  (apply hash-map
+         (concat
+          (when (:time-signature state-change)
+            [:time-signature (:time-signature state-change)])
+          (when (:tempo state-change)
+            [:tempo (:tempo state-change)]))))
 
 (defn generate-bar
   "Generate overtone code for a given measure"
@@ -43,13 +43,13 @@
     (if (:state-change measure)
       `(~(generate-state-change (:state-change measure))
         ~bar)
-      bar)))
+      `(~bar))))
 
 (defn generate-prog
   "Generate overtone code for a given part"
   [part]
   `(~'defprog ~(symbol (:id part))
-     ~(reduce
+     ~@(reduce
         (fn [bars cur]
           (concat bars (generate-bar cur)))
         nil (:bars part))))

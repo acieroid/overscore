@@ -26,12 +26,12 @@
                          (->note :A4 1)
                          (->note :G4 1)
                          (->note :C4 1))))
-         '(bar
-           (play-seq
-            (play :C4 1)
-            (play :A4 1)
-            (play :G4 1)
-            (play :C4 1))))))
+         '((bar
+            (play-seq
+             (play :C4 1)
+             (play :A4 1)
+             (play :G4 1)
+             (play :C4 1)))))))
 
 (deftest test-generate-bar-with-voices
   (is (= (generate-bar
@@ -44,16 +44,16 @@
               (->note-seq [(->note :F5 1)
                            (->note :D5 1)
                            (->note :F5 1)])])]))
-         '(bar
-           (play-chord
-            (play-seq
-             (play :F4 1)
-             (play :D4 1)
-             (play :F4 1))
-            (play-seq
-             (play :F5 1)
-             (play :D5 1)
-             (play :F5 1)))))))
+         '((bar
+            (play-chord
+             (play-seq
+              (play :F4 1)
+              (play :D4 1)
+              (play :F4 1))
+             (play-seq
+              (play :F5 1)
+              (play :D5 1)
+              (play :F5 1))))))))
 
 (deftest test-generate-prog
   (is (= (generate-prog (->prog
@@ -64,6 +64,21 @@
                            (list
                             (->note :C4 1))))))
          '(defprog P1
+            (bar
+             (play :C4 1))))))
+
+(deftest test-generate-prog-with-state-change
+  (is (= (generate-prog
+          (->prog
+           "P1"
+           (list
+            (->bar
+             1 (->state-change [2 4] 50)
+             (list
+              (->note :C4 1))))))
+         '(defprog P1
+            {:time-signature [2 4]
+             :tempo 50}
             (bar
              (play :C4 1))))))
 
