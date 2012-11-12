@@ -8,7 +8,8 @@
 
 (defrecord song [time-signature tempo progs])
 (defrecord prog [id bars])
-(defrecord bar [number notes])
+(defrecord bar [number state-change notes])
+(defrecord state-change [time-signature tempo])
 (defrecord chord [notes])
 (defrecord note-seq [notes])
 (defrecord note [descr duration])
@@ -150,6 +151,32 @@
     (first notes)
     (->note-seq notes)))
 
+(defn parse-state-change
+  "Parse the time-signature and the tempo of a mesure, if it is defined (otherwise returns nil)"
+  [xml]
+  (let [time (-> xml
+                 (down-to :attributes)
+                 (down-to :time))
+        time-signature
+        (if time
+          [(-> time
+               (down-to :beats)
+               first-elem-as-int)
+           (-> time
+               (down-to :beat-type)
+               first-elem-as-int)]
+          nil)
+        tempo-str (-> xml
+                      (down-to :direction)
+                      (down-to :sound)
+                      :attributes :tempo)
+        tempo (if tempo-str
+                (parse-int tempo-str)
+                nil)]
+    (if (and time-signature tempo)
+      (->state-change time-signature tempo)
+      nil)))
+
 (defn parse-measure
   "Parse the XML of a measure"
   [xml & [divisions]]
@@ -167,6 +194,7 @@
                 (map #(parse-measure-helper % divs)
                      (group-by-voice (filter is-note (:content xml))))]
             (->bar (parse-int (:number (:attrs xml)))
+                   (parse-state-change xml)
                    (if (== (count voices) 1)
                      ;; Only one voice, no "main" chord
                      (first voices)
@@ -196,35 +224,23 @@
   [xml]
   ;; The first time signature has to be in the first measure
   ;; (otherwise what would be its time signature?)
-  (let [time (-> xml
-                 (down-to :part)
-                 (down-to :measure)
-                 (down-to :attributes)
-                 (down-to :time))]
-    (if time
-      [(-> time
-           (down-to :beats)
-           first-elem-as-int)
-       (-> time
-           (down-to :beat-type)
-           first-elem-as-int)]
-      ;; defaults to 4-4 (common time)
-      [4 4])))
+  (or (:time-signature (parse-state-change
+                        (-> xml
+                            (down-to :part)
+                            (down-to :measure))))
+      ;; Defaults to 4-4 (common time)
+      [4 4]))
 
 (defn parse-tempo
   "Return the first tempo of the song"
   [xml]
   ;; Same remark as for parse-time-signature
-  (let [tempo (-> xml
-                  (down-to :part)
-                  (down-to :measure)
-                  (down-to :direction)
-                  (down-to :sound)
-                  :attributes :tempo)]
-    (if tempo
-      (parse-int tempo)
-      ;; defaults to 80 bpm
-      80)))
+  (or
+   (:tempo (parse-state-change (-> xml
+                                   (down-to :part)
+                                   (down-to :measure))))
+   ;; Defaults to 80
+   80))
 
 (defn parse-musicxml
   "Parse the XML of a MusicXML file into a musicxml-file structure"

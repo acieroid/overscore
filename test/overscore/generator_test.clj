@@ -20,7 +20,7 @@
 
 (deftest test-generate-bar
   (is (= (generate-bar (->bar
-                        1
+                        1 nil
                         (list
                          (->note :C4 1)
                          (->note :A4 1)
@@ -36,7 +36,7 @@
 (deftest test-generate-bar-with-voices
   (is (= (generate-bar
           (->bar
-           1
+           1 nil
            [(->chord
              [(->note-seq [(->note :F4 1)
                            (->note :D4 1)
@@ -60,7 +60,7 @@
                          "P1"
                          (list
                           (->bar
-                           1
+                           1 nil
                            (list
                             (->note :C4 1))))))
          '(defprog P1
@@ -74,7 +74,7 @@
                            "P1"
                            (list
                             (->bar
-                             1
+                             1 nil
                              (list
                               (->note :C4 1)))))))
                         'foo)
