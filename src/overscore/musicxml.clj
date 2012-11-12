@@ -191,11 +191,6 @@
                     nil
                     (filter is-measure (:content xml)))))))
 
-(defmacro debug [msg expr]
-  `(let [res# ~expr]
-     (doall (println ~msg res#))
-     res#))
-
 (defn parse-time-signature
   "Return the first time signature of the song"
   [xml]
@@ -210,12 +205,11 @@
       [(-> time
            (down-to :beats)
            first-elem-as-int)
-       (debug "beat-type"
-              (-> time
-                  (down-to :beat-type)
-                  first-elem-as-int))]
+       (-> time
+           (down-to :beat-type)
+           first-elem-as-int)]
       ;; defaults to 4-4 (common time)
-      (debug "default" [4 4]))))
+      [4 4])))
 
 (defn parse-tempo
   "Return the first tempo of the song"

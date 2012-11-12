@@ -9,15 +9,26 @@
 (defrecord state [tempo time-signature])
 (defrecord time-signature [beats note-value])
 
-(defn map-to-state
+(defn seq->time-signature
+  "Convert a sequence like [4 4] to a time-signature record"
+  [s]
+  (->time-signature (first s)
+                    (second s)))
+(defn map->state
   "Convert a map like {:time-signature [4 4] :tempo 80} to a state record"
   [m]
-  (let [time-signature (or (:time-signature m)
-                           [4 4])
-        tempo (or (:tempo m)
-                80)]
-    (->state tempo (->time-signature (first time-signature)
-                                     (second time-signature)))))
+  (let [time-signature (or (:time-signature m) [4 4])
+        tempo (or (:tempo m) 80)]
+    (->state tempo (seq->time-signature time-signature))))
+
+(defn update-state
+  "Update a state with the content of a map, overriding the previous values with the ones defined in the map"
+  [state m]
+  (->state
+   (or (:tempo m) (:tempo state))
+   (if (:time-signature m)
+     (seq->time-signature (:time-signature m))
+     (:time-signature state))))
 
 (defn state-beat-time
   "Return the duration of n beats in ms"
@@ -131,9 +142,15 @@ default duration is 1"
   [& body]
   `(fn [state# time# inst#]
        (reduce
-        (fn [t# n#]
-          (+ t# (n# state# (+ time# t#) inst#)))
-        0 (list ~@body))))
+        (fn [[cur-state# t#] n#]
+          (doall (println cur-state# t#))
+          (if (= (type n#) clojure.lang.PersistentArrayMap)
+            ;; Modify the state and don't play anything
+            [(update-state cur-state# n#) t#]
+            ;; Play the note without modifying the state
+            [cur-state#
+             (+ t# (n# cur-state# (+ time# t#) inst#))]))
+        [state# 0] (list ~@body))))
 
 (defmacro defprog
   "Defines a progression, containing bars to be played"
@@ -145,7 +162,7 @@ default duration is 1"
   [state & progs]
   `(fn []
      (let [time# (now)
-           state# (map-to-state ~state)]
+           state# (map->state ~state)]
        (map (fn [descr#]
               ;;; descr is composed of [progression instrument]
               ((first descr#) state# time# (second descr#)))
@@ -162,12 +179,12 @@ default duration is 1"
 
 (defn start-element
   "Start an element of a song (progression, bar or note) with a given instrument"
-  ([elem inst] (start-element inst 80))
-  ([elem inst tempo] (start-element inst tempo [4 4]))
+  ([elem inst] (start-element elem inst 80))
+  ([elem inst tempo] (start-element elem inst tempo [4 4]))
   ([elem inst tempo ts] (elem
-                       (->state
-                        tempo
-                        (->time-signature (first ts)
-                                          (second ts)))
-                       (now)
-                       inst)))
+                         (->state
+                          tempo
+                          (->time-signature (first ts)
+                                            (second ts)))
+                         (now)
+                         inst)))
