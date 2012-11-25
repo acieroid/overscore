@@ -21,20 +21,38 @@
 (defmethod generate-note "class overscore.musicxml.note-seq" [s]
   `(~'play-seq ~@(map generate-note (:notes s))))
 
+(defn generate-state-change
+  "Generate a map that represent a change of state (time signature, tempo)"
+  [state-change]
+  (apply hash-map
+         (concat
+          (when (:time-signature state-change)
+            [:time-signature (:time-signature state-change)])
+          (when (:tempo state-change)
+            [:tempo (:tempo state-change)]))))
+
 (defn generate-bar
   "Generate overtone code for a given measure"
   [measure]
-  `(~'bar
-    ~(if (= (count (:notes measure)) 1)
-       (generate-note (first (:notes measure)))
-       `(~'play-seq
-         ~@(map generate-note (:notes measure))))))
+  (let [bar
+        `(~'bar
+          ~(if (= (count (:notes measure)) 1)
+             (generate-note (first (:notes measure)))
+             `(~'play-seq
+               ~@(map generate-note (:notes measure)))))]
+    (if (:state-change measure)
+      `(~(generate-state-change (:state-change measure))
+        ~bar)
+      `(~bar))))
 
 (defn generate-prog
   "Generate overtone code for a given part"
   [part]
   `(~'defprog ~(symbol (:id part))
-    ~@(map generate-bar (:bars part))))
+     ~@(reduce
+        (fn [bars cur]
+          (concat bars (generate-bar cur)))
+        nil (:bars part))))
 
 (defn generate-song
   "Generate overtone code for an entire song (ie. a MusicXML file)"
