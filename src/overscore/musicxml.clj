@@ -14,6 +14,7 @@
 (defrecord note [descr duration])
 
 ;; TODO: default value when n is nil ?
+;; TODO: put in another file, like utils
 (defn parse-int
   "Parse an integer, possibly from a floating-point representation"
   [n]

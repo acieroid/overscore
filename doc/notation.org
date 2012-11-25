@@ -2,6 +2,7 @@
 #+AUTHOR: Quentin \textsc{Stievenart}
 #+LATEX_HEADER: \usepackage[pdftex]{hyperref}
 #+LATEX_HEADER: \hypersetup{colorlinks,citecolor=black,filecolor=black,linkcolor=black,urlcolor=black}
+#+OPTIONS:   H:3 num:t toc:nil \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
 * Notation
 Classical notation express multiple things:
   1. Each note has a duration and a pitch
@@ -40,12 +41,16 @@ examples could be found). The notation is easily extensible to allow
 it if needed.
 
 ** Notes
-A note will be noted as follow (for a quarter-note 440-Hz A (4th octave))[fn:1]:
+
+A note will be noted as follow (for a quarter-note 440-Hz A (4th octave))[fn::
+The note pitch is noted as the symbol made of the concatenation of the note
+itself, in conventional english notation, and the octave.  ]:
+
 #+BEGIN_SRC clojure
 (play :A4 1)
 #+END_SRC
 
-[fn:1] The note pitch is noted as the symbol made of the
+The note pitch is noted as the symbol made of the
 concatenation of the note itself, in conventional english notation,
 and the octave.
 
