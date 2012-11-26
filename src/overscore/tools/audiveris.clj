@@ -84,14 +84,23 @@
 (defn find-dimensions
   "Find the dimensions of an image given its runs"
   [runs]
-  (let [xs (map :x (sort #(compare (:x %1) (:x %2)) runs))
-        x (first xs)
-        width (+ 1 (- (last xs) x))
-        y (:y (first (sort #(compare (:y %1) (:y %2)) runs)))
-        last-run (last (sort #(compare (+ (:y %1) (:length %1))
-                                       (+ (:y %2) (:length %2)))
-                             runs))
-        height (+ 1 (- (+ (:y last-run) (:length last-run)) y))]
+  (let [xs (sort #(compare (:x %1) (:x %2)) runs) ; runs sorted on x
+        ys (sort #(compare (:y %1) (:y %2)) runs) ; runs sorted on y
+        x (:x (first xs))
+        y (:y (first ys))
+        last-f (fn [orientation accessor runs]
+                 (last (sort #(compare (+ (accessor %1) (:length %1))
+                                       (+ (accessor %2) (:length %2)))
+                             (filter #(= (:orientation %) orientation)
+                                     runs))))
+        last-x-run (last-f :horizontal :x runs)
+        last-y-run (last-f :vertical :y runs)
+        width (+ 1 (if last-x-run
+                     (- (+ (:x last-x-run) (:length last-x-run)) x)
+                     (- (last xs) x)))
+        height (+ 1 (if last-y-run
+                      (- (+ (:y last-y-run) (:length last-y-run)) y)
+                      (- (last ys) y)))]
     [x y width height]))
 
 (defn to-image
