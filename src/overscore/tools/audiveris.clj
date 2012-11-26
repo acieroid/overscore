@@ -96,18 +96,21 @@
                                      runs))))
         last-x-run (last-f :horizontal :x runs)
         last-y-run (last-f :vertical :y runs)
-        width (+ 1 (if last-x-run
-                     (- (+ (:x last-x-run) (:length last-x-run)) x)
-                     (- (:x (last xs)) x)))
-        height (+ 1 (if last-y-run
-                      (- (+ (:y last-y-run) (:length last-y-run)) y)
-                      (- (:y (last ys)) y)))]
+        width (+ 1 (max
+                    (if last-x-run
+                      (- (+ (:x last-x-run) (:length last-x-run)) x)
+                      0)
+                    (- (:x (last xs)) x)))
+        height (+ 1 (max
+                     (if last-y-run
+                       (- (+ (:y last-y-run) (:length last-y-run)) y)
+                       0)
+                     (- (:y (last ys)) y)))]
     [x y width height]))
 
 (defn to-image
   "Convert an XML representation to an image"
   [in out]
-  (println "Processing" in)
   (let [xml (xml/parse in)
         original-runs (extract-all-runs xml)
         [x y width height] (find-dimensions original-runs)
@@ -153,4 +156,8 @@
       (let [filename (str in "/" (.getName file))]
         (if (.isDirectory file)
           (convert filename out)
-          (to-image filename (output-filename out (.getName file) filename)))))))
+          (if (.endsWith (.getName file) "xml")
+            (try
+              (to-image filename (output-filename out (.getName file) filename))
+              (catch Exception e
+                (println "Failed:" filename (.getMessage e))))))))))
