@@ -3,7 +3,8 @@
 
 (ns overscore.tools.audiveris
   (:use [overscore.musicxml :only [parse-int]])
-  (:require [clojure.xml :as xml])
+  (:require [clojure.xml :as xml]
+            [clojure.string :as string])
   (:import (java.awt.image BufferedImage)
            (javax.imageio ImageIO)
            (java.io File)))
@@ -97,15 +98,16 @@
         last-y-run (last-f :vertical :y runs)
         width (+ 1 (if last-x-run
                      (- (+ (:x last-x-run) (:length last-x-run)) x)
-                     (- (last xs) x)))
+                     (- (:x (last xs)) x)))
         height (+ 1 (if last-y-run
                       (- (+ (:y last-y-run) (:length last-y-run)) y)
-                      (- (last ys) y)))]
+                      (- (:y (last ys)) y)))]
     [x y width height]))
 
 (defn to-image
   "Convert an XML representation to an image"
   [in out]
+  (println "Processing" in)
   (let [xml (xml/parse in)
         original-runs (extract-all-runs xml)
         [x y width height] (find-dimensions original-runs)
@@ -116,3 +118,39 @@
     (draw-runs runs img)
     (ImageIO/write img "png" (File. out))))
 
+(defn extract-name
+  "Extract the name of a symbol from its Audiveris' XML file name"
+  [filename]
+  ;; The filename is "SYMBOLNAME.NUMBER.xml". We want to extract "symbolname"
+  (string/lower-case (first (string/split filename #"\." 2))))
+
+(defn md5
+  "Generate a md5 checksum for the given string"
+  [token]
+  (let [hash-bytes
+         (doto (java.security.MessageDigest/getInstance "MD5")
+               (.reset)
+               (.update (.getBytes token)))]
+       (.toString
+         (new java.math.BigInteger 1 (.digest hash-bytes))
+         16)))
+
+(defn output-filename
+  "Return a unique filename in a subdirectory of the directory out"
+  [out name complete-path]
+  (let [dirname (str out "/" (extract-name name))
+        dir (File. dirname)]
+    (if (not (.exists dir))
+      (.mkdirs dir))
+    (str dirname "/" (md5 complete-path) ".png")))
+
+(defn convert
+  "Convert all XML files in a directory (in) to PNG files in another directory (out)"
+  [in out]
+  (println "Processing" in)
+  (let [dir (File. in)]
+    (doseq [file (.listFiles dir)]
+      (let [filename (str in "/" (.getName file))]
+        (if (.isDirectory file)
+          (convert filename out)
+          (to-image filename (output-filename out (.getName file) filename)))))))
