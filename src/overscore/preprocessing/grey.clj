@@ -1,5 +1,4 @@
 ;;; Convert a color image to a greyscale image
-
 (ns overscore.preprocessing.grey
   (:import (java.awt.image BufferedImage)))
 
@@ -43,4 +42,4 @@
           greyval (+ (* 0.3 (extract-r rgb))
                      (* 0.59 (extract-g rgb))
                      (* 0.11 (extract-b rgb)))]
-      (.setRGB img x y (grey->rgb greyval)))))
+      (.setRGB img x y (grey->rgb (long greyval))))))
