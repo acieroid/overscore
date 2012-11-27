@@ -1,0 +1,18 @@
+\usetikzlibrary{arrows,shapes}
+
+\tikzstyle{format} = [draw, thin, fill=blue!20, minimum height=3em, text width=6em, text centered]
+\tikzstyle{medium} = [draw, thin, fill=green!20, minimum height=2.5em]
+
+\begin{tikzpicture}[node distance=5cm, auto,>=latex', thick]
+    \path[->] node[format] (preproc) {Preprocessing};
+    \path[->] node[medium, below of=preproc] (img) {Image (PNG/PDF)}
+                    edge node[swap] {} (preproc);
+    \path[->] node[format, right of=preproc] (staff) {Staff Line}
+                    (preproc) edge node {binary img} (staff);
+    \path[->] node[format, right of=staff] (recogn) {Symbol Recognition}
+                    (staff) edge node {binary img} (recogn);
+    \path[->] node[format, right of=recogn] (gen) {Musical Notation Extractor}
+                    (recogn) edge node {[(sym, pos)]} (gen);
+    \path[->] node[medium, below of=gen] (mxml) {MusicXML}
+                    (gen) edge node[swap] {} (mxml);
+\end{tikzpicture}

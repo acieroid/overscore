@@ -1,0 +1,262 @@
+#+TITLE: Optical Music Recognition -- Program Design
+#+AUTHOR: Quentin Stievenart
+#+LaTeX_CLASS: beamer
+#+LATEX_HEADER: \usetheme{Warsaw}
+#+LATEX_HEADER: \usepackage{color}
+#+LATEX_HEADER: \usepackage{graphicx}
+#+LATEX_HEADER: \definecolor{darkgreen}{RGB}{50, 150, 50}
+#+LATEX_HEADER: \newcommand{\yes}{\textcolor{darkgreen}{yes}}
+#+LATEX_HEADER: \newcommand{\no}{\textcolor{red}{no}}
+#+LATEX_HEADER: \usepackage{tikz}
+#+LATEX_HEADER: \usetikzlibrary{shapes,arrows}
+#+OPTIONS:   H:3 num:t toc:nil \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+* Outline
+  - Preprocessing
+    - Binarization
+    - Reference Lengths
+    - Optional Techniques
+  - Staff Line Processing
+    - Identification
+    - Removal
+  - Symbol Recognition
+    - Segmentation
+    - Classification
+  - Musical Semantics
+  - Design choices
+# #+LaTeX: \resizebox{\textwidth}{!}{\input{pipeline.pgf}}
+* Preprocessing
+  - *Input*: scanned, grey-scale or color image.
+  - *Output*: binary (black and white) image.
+** Input                                                      :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_col: 0.4
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.8\textwidth]{bin_input.jpg}\\
+(from \cite{ComparativeBinarisation})
+\end{center}
+** Output                                                     :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_col: 0.4
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.8\textwidth]{bin_output.png}\\
+(from \cite{ComparativeBinarisation})
+\end{center}
+* Preprocessing -- Binarization
+  - First, convert the image in grey-scale using the following
+    formula for each pixel\cite{ComparisonBinarisation2005}:
+    \[ Grey = 0.3~R + 0.59~G + 0.11~B \]
+# In a global thresholding method, a global threshold (between 0
+# and 255) is chosen as a function of the entire image. Pixels whose
+# value is higher than this treshold are considered as foreground
+# (black), and the others as background (white).
+# In adaptive binarization, different threshold exists for different
+# portions of the image. For example, Niblack's method use a small
+# rectangular window around each pixel to determine the value of the
+# threshold (which is determined using the mean and the standard
+# deviation of the pixel in this window).
+  - *Otsu*'s method\cite{Otsu} is the most commonly and one of the
+    fastest /global thresholding/ method, according to
+    \cite{StateOfTheArt}.
+  - *Niblack*'s method\cite{Niblack} is the most
+    commonly used /adaptive binarization/ method, according to
+    \cite{StateOfTheArt}.
+  - The methods performing the best on degraded music sources
+    are\cite{ComparativeBinarisation}:
+    - *Brink and Pendock*, 1996\cite{BrinkAndPendock}.
+    - *Pugin*, 2007, but the corresponding article couldn't be found.
+    - *Gatos et al.*, 2004\cite{Gatos}.
+* Preprocessing -- Reference Lengths
+   :PROPERTIES:
+   :BEAMER_envargs: [t]
+   :END:
+  - Also, extract reference lengths needed by the rest of the process
+    (*staffspace height* and *staffline height*).
+  - Found using /Run-Length Encoding/\cite{StateOfTheArt}\cite{Audiveris}:
+    - Encode each column of the binary image using RLE.
+    - The most common black-run is the *staffline height*.
+    - The most common white-run is the *staffspace height*.
+** Reference lengths                                          :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_col: 0.4
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.8\textwidth]{reference_lengths.png}\end{center}
+
+** RLE for reference lengths                                  :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_col: 0.4
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.8\textwidth]{rle.png}\end{center}
+* Preprocessing -- Optional Techniques
+  - Noise reduction:
+    - Eliminate isolated black pixels
+    - Fill-in isolated white pixels
+  - Skew detection and correction\cite{OpenOMR}
+    - The image can be skewed if the scan was not done perfectly
+      horizontally.
+  - Less common\cite{Preprocessing}: enhancement, blurring,
+    morphological operations.
+* Preprocessing -- Choice
+  - To implement:
+    1. *Otsu*'s method: simple and widely documented.
+    2. The RLE-based algorithm to identify reference lengths.
+  - No other preprocessing.
+  - Should be enough for most (non-degraded) musical scores. If
+    needed, a better binarization or other noise-reduction methods
+    can be easily added afterwards.
+* Staff Line Processing
+  - *Input*: binary image
+  - *Output*: binary image and staves positions
+  - *Identify* the positions of the staff
+    - Needed to interpret the semantics of the symbols during the
+      generation step.
+  - *Remove* the staff lines (optional)
+    - Isolate the musical symbols (simplify segmentation step).
+    - Reduces noise (simplify classification step).
+    - Only a few OMR systems don't do this step.
+  - Challenging step if the staff lines are distorted.
+    - We can improve results by adding a *skew correction* step in
+      the preprocessing of the image.
+* Staff Line Identification
+   :PROPERTIES:
+   :BEAMER_envargs: [t]
+   :END:
+  - Use vertical projections
+  - 5 maxima spaced of the staffspace height = a staff
+  - Store the position of each staff
+** Vertical projections                                       :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_col: 0.7
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.8\textwidth]{staffline_identification.png}\\
+(from \cite{OpenOMR})\end{center}
+* Staff Line Removal
+  - Lots of algorithms:
+    - Linetracking Runlength\cite{LinetrackingRunlength}
+    - Linetracking Chord\cite{LinetrackingChord}
+    - Carter\cite{Carter}
+    - Fujinaga\cite{Fujinaga}
+    - Roach and Tatem\cite{RoachAndTatem}
+    - Skeleton\cite{ComparativeStudyStaffRemoval}
+  - No best algorithm according to
+    \cite{ComparativeStudyStaffRemoval}, but for undeformed images,
+    Roach and Tatem perform better than the others.
+#  - *Evaluation*: using score-generating software like MuseScore, it is
+#    possible to disable the drawing of the staff lines. This would
+#    then produce a perfect "staff line removed" image that we can
+#    compare to the output of our staff line removal algorithm.
+* Staff Line Removal
+** Input                                                      :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.8\textwidth]{staffline_removal_input.png}\end{center}
+** Output                                                     :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.8\textwidth]{staffline_removal_output.png}\end{center}
+* Staff Line Processing -- Choice
+  - To implement:
+    1. Identification using vertical projections.
+    2. Removal using *Roach and Tatem* algorithm (Open Source
+       implementation of multiple staff line removal algorithms
+       available[fn:1:http://music-staves.sf.net/]).
+* Symbol Recognition
+  - *Input*: binary image (and staves positions)
+  - *Output*: list of musical symbols with their positions within the staff
+  - Done in two steps:
+    1. Segmentation
+    2. Classification
+* Symbol Recognition -- Segmentation
+  - *Input*: binary image
+  - *Output*: small binary images with their positions
+  - Not really described in the litterature, except for
+    OpenOMR\cite{OpenOMR}.
+  - OpenOMR's method:
+    1. *Level 0 image segmentation* (L0) using horizontal projection: find
+       groups of symbols.
+    2. *Note head detection* using vertical projection: find which L0
+       segments contains note heads.
+    3. *Symbol segmentation* (L1): separate symbols in L0 segments
+       that contains note heads.
+    4. *Note processing* (L2): seperate note heads from other symbols by
+       doing:
+       - Stem removal, using vertical projection
+       - Staff line removal
+* Symbol Recognition -- Segmentation (OpenOMR)
+** Input                                                      :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.8\textwidth]{seg_input.png}\end{center}
+** Level 0                                                    :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.8\textwidth]{seg_l0.png}\end{center}
+** Level 1                                                    :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_col: 0.3
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.5\textwidth]{seg_l1.png}\end{center}
+** Level 2                                                    :BMCOL:B_block:
+   :PROPERTIES:
+   :BEAMER_col: 0.3
+   :BEAMER_env: block
+   :END:
+\begin{center}\includegraphics[width=0.5\textwidth]{seg_l2.png}\end{center}
+* Symbol Recognition -- Classification
+  - *Input*: small binary image
+  - *Output*: corresponding musical symbol
+  - Uses well-known classification algorithms: *Neural Networks* (NN),
+    *k-Nearest Neighbors* (kNN), *Support Vector Machines*
+    (SVM), *Hidden Markov Models* (HMM).
+  - According to \cite{Classification}:
+    - The two best methods are SVM and kNN.
+    - For handwritten music, SVM performs better than kNN.
+    - For typesetted music, kNN performs better than SVM.
+  - Training sets:
+    - OpenOMR: training set for methods without staffline removal,
+      727 files.
+    - Audiveris: stored in =xml= files describing vertical runs
+      representing the symbol, 4918 files.
+    - No others publicly available training set found.
+* Symbol Recognition -- Choice
+  - To implement:
+    1. Segmentation in a similar way than OpenOMR\cite{OpenOMR}.
+    2. Classification using *kNN*, trained with Audiveris' training
+       set.
+* Musical Semantics
+  - *Input*: musical symbols and their position relative to the staff
+  - *Output*: MusicXML
+  - No specific method
+  - Rules and heuristics
+    - For example, for a *note*:
+      - *Duration*: note head type? note flag type?
+      - *Pitch*: note head vertical position? accidental?
+* Design Choices
+  - Select a set of scores for tests and evaluation of the system
+  - Each stage takes input from a file and outputs to a file
+  1. Preprocessing:
+    1. *Binarization*: Otsu's method
+    2. *Reference lengths*: RLE-based algorithm
+  2. Staff line processing:
+    1. *Identification*: horizontal projections
+    2. *Removal*: Roach and Tatem
+  3. Symbol Recognition:
+    1. *Segmentation*: horizontal/vertical projections
+    2. *Classification*: k-Nearest-Neighbor with Audiveris training set
+  4. Musical Semantics: rule-based
+* Bibliography
+   :PROPERTIES:
+   :BEAMER_envargs: [allowframebreaks]
+   :END: 
+\scriptsize
+\bibliographystyle{plain}
+\bibliography{bibliography}
