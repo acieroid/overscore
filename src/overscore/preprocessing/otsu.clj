@@ -94,3 +94,25 @@
   [img]
   (let [hist (build-histogram img)]
     (maximize #(compute-between-class-variance % hist) (range 1 255))))
+
+;; TODO: move this function in some util package
+(defn apply-to-pixels
+  "Change each pixels according to the function f. f takes as argument
+  the rgb value of the pixel, and returns the new pixel rgb value"
+  [^BufferedImage img f]
+  (doseq [x (range (.getWidth img))
+          y (range (.getHeight img))]
+    (.setRGB img x y (f (.getRGB img x y)))))
+
+(defn binarize
+  "Binarize an image, by finding the global threshold t. Pixels whose
+  grey value is greater than t will be set as black and the others
+  will be set as white."
+  [^BufferedImage img]
+  (let [black 0x000000
+        white 0xFFFFFF
+        t (find-threshold img)]
+    (apply-to-pixels img
+                     #(if (< (get-grey %) t)
+                        black
+                        white))))
