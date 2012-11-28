@@ -3,6 +3,7 @@
 ;;; http://www.makemusic.com/musicxml/specification/dtd/
 
 (ns overscore.musicxml
+  (:use overscore.utils)
   (:require [clojure.xml :as xml]
             [clojure.zip :as zip]))
 
@@ -13,16 +14,6 @@
 (defrecord chord [notes])
 (defrecord note-seq [notes])
 (defrecord note [descr duration])
-
-;; TODO: default value when n is nil ?
-;; TODO: put in another file, like utils
-(defn parse-int
-  "Parse an integer, possibly from a floating-point representation"
-  [n]
-  (try
-    (int (Double. n))
-    (catch Exception e
-      (println "Error when parsing integer from" n ":" e))))
 
 (defn first-elem-as-int
   "Return the firts element of the :contents attribute as an integer"

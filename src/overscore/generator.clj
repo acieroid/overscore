@@ -1,5 +1,6 @@
 (ns overscore.generator
-  (:use clojure.java.io
+  (:use overscore.utils
+        clojure.java.io
         clojure.pprint
         overscore.musicxml))
 

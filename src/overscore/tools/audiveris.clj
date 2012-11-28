@@ -11,9 +11,6 @@
 
 (defrecord run [x y length orientation])
 
-(def black 0x000000)
-(def white 0xFFFFFF)
-
 (defn extract-run
   "Extract one run from its XML representation"
   [run orientation first-pos]
@@ -53,13 +50,14 @@
 (defn draw-run
   "Draw a run in an image"
   [run img]
-  (case (:orientation run)
-    :horizontal
-    (doseq [x (range (:x run) (+ (:x run) (:length run)))]
-      (.setRGB img x (:y run) black))
-    :vertical
-    (doseq [y (range (:y run) (+ (:y run) (:length run)))]
-      (.setRGB img (:x run) y black))))
+  (let [black 0x000000]
+    (case (:orientation run)
+      :horizontal
+      (doseq [x (range (:x run) (+ (:x run) (:length run)))]
+        (.setRGB img x (:y run) black))
+      :vertical
+      (doseq [y (range (:y run) (+ (:y run) (:length run)))]
+        (.setRGB img (:x run) y black)))))
 
 (defn draw-runs
   "Draw all the runs from an XML representation into an image"
@@ -111,7 +109,8 @@
 (defn to-image
   "Convert an XML representation to an image"
   [in out]
-  (let [xml (xml/parse in)
+  (let [white 0xFFFFFF
+        xml (xml/parse in)
         original-runs (extract-all-runs xml)
         [x y width height] (find-dimensions original-runs)
 

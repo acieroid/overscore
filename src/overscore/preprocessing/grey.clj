@@ -1,6 +1,7 @@
 ;;; Convert a color image to a greyscale image
 (ns overscore.preprocessing.grey
-  (:import (java.awt.image BufferedImage)))
+  (:use overscore.utils)
+  (:import java.awt.image.BufferedImage))
 
 (defn grey->rgb
   "Convert a grey pixel to its RGB representation. For example, a
@@ -10,21 +11,6 @@
   (+ greyval
      (bit-shift-left greyval 8)
      (bit-shift-left greyval 16)))
-
-(defn extract-r
-  "Extract the R value of a RGB representation"
-  [^long rgb]
-  (bit-shift-right (bit-and rgb 0xFF0000) 16))
-
-(defn extract-g
-  "Extract the G value of a RGB representation"
-  [^long rgb]
-  (bit-shift-right (bit-and rgb 0x00FF00) 8))
-
-(defn extract-b
-  "Extract the B value of a RGB representation"
-  [^long rgb]
-  (bit-and rgb 0x0000FF))
 
 (defn color->greyscale
   "Convert all the pixels in image img to greyscale pixels, using the

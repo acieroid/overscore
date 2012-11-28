@@ -2,19 +2,8 @@
 ;;; Otsu's method is well presented on [1].
 ;;; [1] http://www.labbookpages.co.uk/software/imgProc/otsuThreshold.html
 (ns overscore.preprocessing.otsu
+  (:use overscore.utils)
   (:import (java.awt.image BufferedImage)))
-
-(defn square
-  "Return x squared"
-  [x]
-  (* x x))
-
-(defn get-grey
-  "Return the grey value of a pixel. Assume we already have a
-  grey-scale image (so we can only extract the B value, since it
-  should be equal to R and G for a grey-scale image)"
-  [^long rgb]
-  (bit-and rgb 0xFF))
 
 (defn build-histogram
   "Build the histogram (a 256 elements vector). The ith element of the
@@ -70,21 +59,6 @@
         [ww mw] (compute-parameters :white t hist)]
     (* wb ww (square (- mb mw)))))
 
-(defn maximize
-  "Find the element of a collection for which the value f returns with
-  it as argument is the maximum.
-  For example, (maximize #(* -1 %) [1 2 3]) is 1"
-  [f coll]
-  (let [helper (fn helper [[x & xs]]
-                 (if (empty? xs)
-                   [x (f x)]
-                   (let [[max-item max-value] (helper xs)
-                         value (f x)]
-                     (if (> value max-value)
-                       [x value]
-                       [max-item max-value]))))]
-    (first (helper coll))))
-
 ;; TODO: the method we use could be improved. We don't need to
 ;; recalculate from scratch the parameters for each t, but we can
 ;; compute them iteratively. See the implementation given in [1].
@@ -95,14 +69,6 @@
   (let [hist (build-histogram img)]
     (maximize #(compute-between-class-variance % hist) (range 1 255))))
 
-;; TODO: move this function in some util package
-(defn apply-to-pixels
-  "Change each pixels according to the function f. f takes as argument
-  the rgb value of the pixel, and returns the new pixel rgb value"
-  [^BufferedImage img f]
-  (doseq [x (range (.getWidth img))
-          y (range (.getHeight img))]
-    (.setRGB img x y (f (.getRGB img x y)))))
 
 (defn binarize
   "Binarize an image, by finding the global threshold t. Pixels whose
