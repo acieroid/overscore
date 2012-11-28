@@ -56,19 +56,43 @@
   "Compute the between class variance for a certain value of the threshold, t."
   [^long t hist]
   (let [[wb mb] (compute-parameters :black t hist)
-        [ww mw] (compute-parameters :white t hist)]
-    (* wb ww (square (- mb mw)))))
+        [wf mf] (compute-parameters :white t hist)]
+    (* wb wf (square (- mb mf)))))
 
-;; TODO: the method we use could be improved. We don't need to
-;; recalculate from scratch the parameters for each t, but we can
-;; compute them iteratively. See the implementation given in [1].
+;;; TODO: the threshold seems to be a little bit different (typically
+;;; 1 or 2 units less) from the threshold that
+;;; find-threshold-iterative finds
 (defn find-threshold
   "Find the threshold value that maximizes the between class variance
-  given a certain histogram"
-  [img]
+  given a certain image"
+  [^BufferedImage img]
   (let [hist (build-histogram img)]
     (maximize #(compute-between-class-variance % hist) (range 1 255))))
 
+(defn find-threshold-iterative
+  "Find the threshold value that maximizes the between class variance
+   given a certain image. Compute the threshold in an iterative
+   way. The performance are a bit better than find-threshold on small
+   images (around 30% faster). On big images (like a 300dpi scanned
+   partition), find-threshold seems to be faster (around 5% faster)."
+  [^BufferedImage img]
+  (let [hist (build-histogram img)
+        sum (reduce + (map * hist (range 256)))
+        total (reduce + hist)]
+    (loop [t 1
+           max-t 0 max 0
+           wb 0 wf 0 sumb 0]
+      (if (>= t 256)
+        max-t                           ; we return the best threshold
+        (let [sumb (+ sumb (* t (nth hist t))) ; new value for sumb
+              wb (+ wb (nth hist t))    ; weight for the background
+              wf (- total wb)           ; weight for the foreground
+              mb (if (== wb 0) 0 (/ sumb wb)) ; mean for the background
+              mf (if (== wf 0) 0 (/ (- sum sumb) wf)) ; mean for the foreground
+              var (* wb wf (square (- mb mf))) ; between class variance
+              ;; new values for max and max-t
+              [max max-t] (if (> var max) [var t] [max max-t])]
+          (recur (inc t) max-t max wb wf sumb))))))
 
 (defn binarize
   "Binarize an image, by finding the global threshold t. Pixels whose
