@@ -72,25 +72,20 @@
           y (range (.getHeight img))]
     (.setRGB img x y (f (.getRGB img x y)))))
 
-(defn get-grey
-  "Return the grey value of a pixel. Assume we already have a
-  grey-scale image (so we can only extract the B value, since it
-  should be equal to R and G for a grey-scale image)"
-  [^long rgb]
-  (bit-and rgb 0xFF))
+(defn extract-gray
+  "Return the gray value of a pixel. Assume we already have a
+  grayscale image (in fact, it returns the R value, which is the same
+  as the G and B ones for a grayscale image)."
+  [^BufferedImage img ^long pixel]
+  (let [cm (.getColorModel img)]
+    (.getRed cm pixel)))
 
-(defn extract-r
-  "Extract the R value of a RGB representation"
-  [^long rgb]
-  (bit-shift-right (bit-and rgb 0xFF0000) 16))
-
-(defn extract-g
-  "Extract the G value of a RGB representation"
-  [^long rgb]
-  (bit-shift-right (bit-and rgb 0x00FF00) 8))
-
-(defn extract-b
-  "Extract the B value of a RGB representation"
-  [^long rgb]
-  (bit-and rgb 0x0000FF))
-
+(defn extract-rgb
+  "Extract the R, G and B values of a pixel in an image, return them
+  as a vector"
+  [^BufferedImage img ^long x ^long y]
+  (let [cm (.getColorModel img)
+        pixel (.getRGB img x y)]
+    [(.getRed cm pixel)
+     (.getGreen cm pixel)
+     (.getBlue cm pixel)]))

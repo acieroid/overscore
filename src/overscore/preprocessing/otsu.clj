@@ -20,7 +20,7 @@
      (>= y (.getHeight img)) (persistent! hist) ; we're done
      :else (recur
                ;; update histogram
-               (let [index (get-grey (.getRGB img x y))]
+               (let [index (extract-gray img (.getRGB img x y))]
                  (assoc! hist index (inc (nth hist index))))
              (inc x) y))))
 
@@ -103,6 +103,6 @@
         white 0xFFFFFF
         t (find-threshold img)]
     (apply-to-pixels img
-                     #(if (< (get-grey %) t)
+                     #(if (< (extract-gray img %) t)
                         black
                         white))))

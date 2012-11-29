@@ -3,6 +3,12 @@
   (:use overscore.utils)
   (:import java.awt.image.BufferedImage))
 
+;; TODO: we might want to inspect the image were we write, to avoid
+;; depending on a representation. This function will for example not
+;; work with RGBA images. However, since we are converting to a
+;; grayscale image, we can rely on the fact that the new image will
+;; NOT be RGBA. But for this, we would need to copy the image and
+;; change its ColorModel.
 (defn gray->rgb
   "Convert a gray pixel to its RGB representation. For example, a
   white pixel has a gray value of 0xFF. Its RGB representation is
@@ -24,8 +30,6 @@
   [^BufferedImage img]
   (doseq [x (range (.getWidth img))
           y (range (.getHeight img))]
-    (let [rgb (.getRGB img x y)
-          grayval (+ (* 0.3 (extract-r rgb))
-                     (* 0.59 (extract-g rgb))
-                     (* 0.11 (extract-b rgb)))]
+    (let [[r g b] (extract-rgb img x y)
+          grayval (+ (* 0.3 r) (* 0.59 g) (* 0.11 b))]
       (.setRGB img x y (gray->rgb (long grayval))))))
