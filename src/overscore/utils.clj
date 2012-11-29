@@ -72,20 +72,25 @@
           y (range (.getHeight img))]
     (.setRGB img x y (f (.getRGB img x y)))))
 
+;; TODO: see extract-rgb
 (defn extract-gray
   "Return the gray value of a pixel. Assume we already have a
   grayscale image (in fact, it returns the R value, which is the same
   as the G and B ones for a grayscale image)."
   [^BufferedImage img ^long pixel]
-  (let [cm (.getColorModel img)]
-    (.getRed cm pixel)))
+  (bit-and 0xFF pixel))
 
+;; TODO: It would be more clean to extract the values using the
+;; ColorModel of the BufferedImage, though it might affect
+;; performance. As is, this function will work with (A)RGB images, but
+;; won't with other encodings (RGBA, (A)BGR, ...). However, those
+;; encodings don't seem to be widely spread (I don't know if they're
+;; used at all)
 (defn extract-rgb
   "Extract the R, G and B values of a pixel in an image, return them
   as a vector"
   [^BufferedImage img ^long x ^long y]
-  (let [cm (.getColorModel img)
-        pixel (.getRGB img x y)]
-    [(.getRed cm pixel)
-     (.getGreen cm pixel)
-     (.getBlue cm pixel)]))
+  (let [pixel (.getRGB img x y)]
+    [(bit-and 0xFF (bit-shift-right pixel 16))
+     (bit-and 0xFF (bit-shift-right pixel 8))
+     (bit-and 0xFF pixel)]))
