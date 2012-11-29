@@ -1,0 +1,6 @@
+Be careful with links from IMSLP. The link should be on the special page
+Special:IMSLPDisclaimerAccept instead of Special:ImagefromIndex.
+
+Beethoven, Fur Elise, http://imslp.org/wiki/Für_Elise,_WoO_59_(Beethoven,_Ludwig_van)
+DATA|furelise|pdf|http://imslp.org/wiki/Special:IMSLPDisclaimerAccept/51818
+

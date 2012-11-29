@@ -16,6 +16,10 @@
   [x]
   (* x x))
 
+;;;;;;;;;;;;;;;;;;;;;;
+;;; List utilities ;;;
+;;;;;;;;;;;;;;;;;;;;;;
+
 (defn maximize
   "Find the element of a collection for which the value f returns with
   it as argument is the maximum.
@@ -30,6 +34,35 @@
                        [x value]
                        [max-item max-value]))))]
     (first (helper coll))))
+
+(defn one-each-two
+  "Return an element every two elements for the argument. For
+  example, (one-each-two [1 2 3 4]) returns [1 3]"
+  [coll]
+  (loop [l coll
+         acc []]
+    (if (empty? l)
+      (reverse acc)
+      (recur (rest (rest l)) (cons (first l) acc)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;;; Debug utilities ;;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro debug
+  "Print an optional message and the value of x, then returns x"
+  ([x]
+     `(let [res# ~x]
+        (println res#)
+        res#))
+  ([msg x]
+     `(let [res# ~x]
+        (println ~msg res#)
+        res#)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; BufferedImage and pixel manipulation functions ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn apply-to-pixels
   "Change each pixels according to the function f. f takes as argument
@@ -60,3 +93,4 @@
   "Extract the B value of a RGB representation"
   [^long rgb]
   (bit-and rgb 0x0000FF))
+
