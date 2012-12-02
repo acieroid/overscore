@@ -65,12 +65,14 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn apply-to-pixels
-  "Change each pixels according to the function f. f takes as argument
-  the rgb value of the pixel, and returns the new pixel rgb value"
-  [^BufferedImage img f]
-  (doseq [x (range (.getWidth img))
-          y (range (.getHeight img))]
-    (.setRGB img x y (f (.getRGB img x y)))))
+  "Apply f to each pixel of the first image, and set the corresponding
+  pixel in the second image to the result of f. f takes as argument
+  the source image and the rgb value of the pixel, and returns the new
+  pixel rgb value"
+  [^BufferedImage src ^BufferedImage dest f]
+  (doseq [x (range (.getWidth src))
+          y (range (.getHeight src))]
+    (.setRGB dest x y (f (.getRGB src x y)))))
 
 ;; TODO: see extract-rgb
 (defn extract-gray

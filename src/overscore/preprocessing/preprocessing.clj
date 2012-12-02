@@ -17,8 +17,12 @@
 (defn is-grayscale
   "Is an image already in grayscale?"
   [img]
-  ;; Grayscale images have max. 8 bits per pixel (the gray level)
-  (<= (.getPixelSize (.getColorModel img)) 8))
+  ;; Grayscale images have max. 8 bits per pixel (the gray level) and
+  ;; only one component
+  (let [cm (.getColorModel img)]
+    (and
+     (<= (.getPixelSize cm) 8)
+     (== (count (.getComponentSize cm)) 1))))
 
 (defn preprocessing
   "Performs:
@@ -31,18 +35,13 @@
      - Grayscale 1-bit PNG image (black and white)
      - Reference lengths as a pair (in a file)"
   [in out-img out-ref]
-  (let [img (ImageIO/read (File. in))]
-    ;; Convert to grayscale
-    (if (not (is-grayscale img))
-      (color->grayscale img))
-    ;; Convert to binary
-    (if (not (is-binary img))
-      (binarize img))
-    (let [references (rle img)]
-      ;; TODO: write it as a 1-bit grayscale PNG
-      (ImageIO/write img "png" (File. out-img))
-      ;; TODO: have something in utils.clj to handle text file read/write
-      (with-open [f (writer out-ref)]
-        (.write f (str references))))))
+  (let [img (ImageIO/read (File. in))
+        grayscale (if (is-grayscale img) img (color->grayscale img))
+        binary (if (is-binary grayscale) grayscale (binarize grayscale))
+        references (rle binary)]
+    (ImageIO/write binary "png" (File. out-img))
+    ;; TODO: have something in utils.clj to handle text file read/write
+    (with-open [f (writer out-ref)]
+      (.write f (str references)))))
 
 

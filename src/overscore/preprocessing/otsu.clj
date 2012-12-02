@@ -101,8 +101,11 @@
   [^BufferedImage img]
   (let [black 0x000000
         white 0xFFFFFF
-        t (find-threshold img)]
-    (apply-to-pixels img
+        t (find-threshold img)
+        out (BufferedImage. (.getWidth img) (.getHeight img)
+                            BufferedImage/TYPE_BYTE_BINARY)]
+    (apply-to-pixels img out
                      #(if (< (extract-gray img %) t)
                         black
-                        white))))
+                        white))
+    out))
