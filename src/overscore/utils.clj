@@ -45,6 +45,22 @@
       (reverse acc)
       (recur (rest (rest l)) (cons (first l) acc)))))
 
+(defn mean
+  "Return the mean of all the elements in the collection"
+  [coll]
+  (let [sum (reduce + coll)
+        n (count coll)]
+    (/ sum n)))
+
+(defn ifilter
+  "Return the indexes of the elements in coll that satisfy
+  pred. Similar to filter, but returns the indexes instead of the
+  elements"
+  [coll pred]
+  (let [n (count coll)]
+    (map first (filter (comp pred second)
+                       (map list (range n) coll)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Debug utilities ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
