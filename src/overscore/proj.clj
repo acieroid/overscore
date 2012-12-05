@@ -28,8 +28,9 @@
   [^BufferedImage img direction]
   (let [xs (range (.getWidth img))
         ys (range (.getHeight img))]
-    (case direction
-      :x
-      (map #(count-pixels img [%] ys) xs)
-      :y
-      (map #(count-pixels img xs [%]) ys))))
+    (apply vector
+           (case direction
+             :x
+             (map #(count-pixels img [%] ys) xs)
+             :y
+             (map #(count-pixels img xs [%]) ys)))))

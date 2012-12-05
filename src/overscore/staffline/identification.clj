@@ -53,8 +53,10 @@
   peaks. The systems are found by looking for clusters of five or more
   peaks. Return a list of the start and end position of each system."
   [maximas]
-  ;; t is the threshold value for the distance between systems
-  (let [t (mean (map - (rest maximas) maximas))]
+  ;; t is the threshold value for the distance between systems this
+  ;; threshold value was found by trial-and-error, it might affect the
+  ;; accuracy on other partitions.
+  (let [t (* 1.5 (mean (map - (rest maximas) maximas)))]
     (loop [l maximas
            acc []
            start (first l)] ; the start position of the current system
@@ -66,20 +68,48 @@
             (recur (rest l) (cons [start (first l)] acc) (second l)))
           (recur (rest l) acc start))))))
 
+(defn find-boundaries
+  "Find the boundaries of a system given the position of the staffs
+  and the maximum boundaries authorized"
+  [data start end prev-end next-start]
+  (let [helper (fn [from to dir]
+                 (loop [min-value (nth data from)
+                        min-index from
+                        index from]
+                   (if (== index to)
+                     min-index
+                     (if (< (nth data index) min-value)
+                       (recur (nth data index) index (dir index))
+                       (recur min-value min-index (dir index))))))]
+    [(helper start prev-end dec)
+     (helper end next-start inc)]))
+
 (defn isolate-systems
   "From an image, isolates the system and returns a list of image,
   each image containing only one system."
   [^BufferedImage img]
-  (map
-   ;; Build the fragment image
-   (fn [[start end]]
-     (let [fragment (BufferedImage. (.getWidth img) (- end start)
-                                    BufferedImage/TYPE_BYTE_BINARY)]
-       (doseq [x (range (.getWidth img))
-               y (range start end)]
-         (.setRGB fragment x (- y start)
-                  (.getRGB img x y)))
-       fragment))
-   ;; Find the systems positions
-   (let [data (projection img :y)]
-     (debug (find-systems (find-maximas data (mean data)))))))
+  (let [data (projection img :y)
+        ;; The systems positions
+        systems (find-systems (find-maximas data (mean data)))]
+    (map
+     ;; Build the fragment image
+     (fn [[staff-start staff-end] ; the staff boundaries
+          prev-end next-start] ; the previous/next system boundaries
+       ;; The system starts at the first blank line
+       (let [[start end] (find-boundaries data
+                                          staff-start staff-end
+                                          prev-end next-start)
+             fragment (BufferedImage. (.getWidth img) (- end start)
+                                      BufferedImage/TYPE_BYTE_BINARY)]
+         (doseq [x (range (.getWidth img))
+                 y (range start end)]
+           (.setRGB fragment x (- y start)
+                    (.getRGB img x y)))
+         fragment))
+     ;; We need to know the end of the previous system, and the start
+     ;; of the next one
+     systems
+     ;; The first previous systems is considered to end at 0
+     (cons 0 (map second systems))
+     ;; The end of the last system is on the last row
+     (concat (map first (rest systems)) [(dec (count data))]))))
