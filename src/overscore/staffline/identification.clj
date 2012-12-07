@@ -12,6 +12,11 @@
 ;;; beginning and the end of the stafflines by moving "windows"
 ;;; horizontally and doing y-projections of the pixels located on
 ;;; those windows.
+
+;;; For the moment, only the system identification is done, not the
+;;; staffline position identification. Systems are thus isolated in
+;;; different images and can be analyzed separately. Staffline
+;;; identification is done in the removal step.
 (ns overscore.staffline.identification
   (:use overscore.proj
         overscore.utils)
@@ -86,7 +91,8 @@
 
 (defn isolate-systems
   "From an image, isolates the system and returns a list of image,
-  each image containing only one system."
+  each image containing only one system. Return a list of image,
+  representing the isolated systems."
   [^BufferedImage img]
   (let [data (projection img :y)
         ;; The systems positions
