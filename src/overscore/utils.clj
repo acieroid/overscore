@@ -112,3 +112,15 @@
     [(bit-and 0xFF (bit-shift-right pixel 16))
      (bit-and 0xFF (bit-shift-right pixel 8))
      (bit-and 0xFF pixel)]))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Filesystem utilities ;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn temp-name
+  "Create a temporary file name like what is created for temp-file and
+   temp-dir. Taken from the fs library."
+  ([prefix] (temp-name prefix ""))
+  ([prefix suffix]
+     (format "%s%s-%s%s" prefix (System/currentTimeMillis)
+             (long (rand 0x100000000)) suffix)))
+

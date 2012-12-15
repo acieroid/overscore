@@ -1,4 +1,4 @@
-;;; Implement the processing step of the OMR system.
+;;; Implement the prerprocessing step of the OMR system.
 (ns overscore.preprocessing.preprocessing
   (:use overscore.preprocessing.gray
         overscore.preprocessing.otsu

@@ -21,12 +21,12 @@ def remove_stafflines(img_in, img_out, pos_out):
     # Save the stafflines positions, in a clojure-readable format
     staves = ms.get_staffpos()
     with open(pos_out, 'w') as f:
-        f.write('(')
+        f.write('[')
         # We should only have one system, so we only handle the first one
-        # TODO: what to do if no staff was found ?
         # TODO: there seems to be a constant error (around 10px) for each position
-        f.write(' '.join(map(str, staves[0].yposlist)))
-        f.write(')')
+        if len(staves) > 0:
+            f.write(' '.join(map(str, staves[0].yposlist)))
+        f.write(']')
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
