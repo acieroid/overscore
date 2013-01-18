@@ -1,0 +1,72 @@
+* Overview
+Overscore is an automatic score reader, that recognizes musical sheets
+and plays them using [[http://overtone.github.com/][Overtone]]. Overscore consists of three main stages:
+  - an /Optical Music Recognition/ (OMR) system to recognize
+    partitions and compile them into MusicXML files
+  - a MusicXML parser that compiles MusicXML files into Clojure files
+  - multiple helper macros and functions built over Overtone to have a
+    system more adapted to encode classical music
+* How it works
+** OMR
+The initial plan for the OMR part is documented in
+=doc/design/design.org=. In this section we will briefly describe how
+it is currently implemented and discuss some results.
+*** Part 1: Image Preprocessing
+**** Binarization
+Since the input image might be in grayscale or color, a binarization
+step is sometimes necessary. However, most musical sheets found on the
+internet are already binarized and this step is thus performed only if
+necessary.
+
+It is done in two steps:
+  1. If the image is in color, convert it into grayscale using the
+     [[http://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale][luma compenent]], implemented in =overscore/preprocessing/gray.clj=.
+  2. Convert the grayscale image into binary using
+     [[http://en.wikipedia.org/wiki/Otsu%27s_method][Otsu's method]], implemented in =overscore/preprocessing/otsu.clj=.
+**** Reference lengths
+Once the image is binarized, the reference lengths (staff line and
+staff space height) are found by analyzing the most common vertical
+runs (black for staff line height, white for staff space height) as
+described in [[RebeloFujinaga2012][Rebelo, Fujinaga et. al., 2012]]
+**** Improvements
+Multiple steps could be added to the preprocessing part. The most
+useful would be a *skew detection and correction* step, since it is
+common to have skewed images among scanned documents. Another possibly
+useful step would be a *noise reduction* step, depending on the
+quality of the scanned documents.
+*** Part 2: Staff line processing
+**** System isolation
+The first step done by this part is to isolate the systems to process
+them independently. This is done by a technique similar to the one
+described in [[Fujinaga1988][Fujinaga, 1988]].
+
+First, a y-projection of the pixel is done, and the systems are
+located by looking for five distinct peaks of black pixels. Then, the
+boundaries of the system are found by looking around the system for
+the lines where the number of black pixel is minimal.
+
+Once each system is found, they are each saved in an image.
+**** Staff line identification and removal
+The staff line removal is done by using [[http://gamera.informatik.hsnr.de/index.html][Gamera's]] [[http://music-staves.sf.net/][music-staves]]
+plugin. A python script is simply called with the input image, and
+outputs the same image without the staffline (in an image), as well as
+the staff line positions (in a text file).
+
+If no staff line were found in an image, it can be discarded since it
+is most likely not a relevant image (eg. some text, like the title of
+the partition).
+**** Improvements
+If the staff line removal does not work as expected because the image
+is skewed, a skew correction algorithm should be implemented in the
+[[Part 1: Image Preprocessing][preprocessing]].
+* Bibliography
+The papers cited in this documentation are given in this section. For
+more papers about the topic of OMR, see =doc/design/design.pf=.
+
+# <<RebeloFujinaga2012>>
+  - A. Rebelo, I. Fujinaga, F. Paszkiewicz, A. R. S. Marcal,
+    C. Guedes, and J. S. Cardoso, /Optical Music Recognition -
+    state-of-the-art and open issues/, 2012, [[http://www.inescporto.pt/~jsc/publications/journals/2012ARebeloIJMIR.pdf][link]].
+# <<Fujinaga1988>>
+  - I. Fujinaga, /Optical Music Recognition using Projections/, 1988,
+    [[http://digitool.library.mcgill.ca/thesisfile61870.pdf][link]].

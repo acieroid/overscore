@@ -75,7 +75,8 @@
 
 (defn find-boundaries
   "Find the boundaries of a system given the position of the staffs
-  and the maximum boundaries authorized"
+  and the maximum boundaries authorized. Simply look for line where
+  the number of black pixels is minimal"
   [data start end prev-end next-start]
   (let [helper (fn [from to dir]
                  (loop [min-value (nth data from)
