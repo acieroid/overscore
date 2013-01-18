@@ -20,7 +20,7 @@ necessary.
 
 It is done in two steps:
   1. If the image is in color, convert it into grayscale using the
-     [[http://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale][luma compenent]], implemented in =overscore/preprocessing/gray.clj=.
+     [[http://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale][luma component]], implemented in =overscore/preprocessing/gray.clj=.
   2. Convert the grayscale image into binary using
      [[http://en.wikipedia.org/wiki/Otsu%27s_method][Otsu's method]], implemented in =overscore/preprocessing/otsu.clj=.
 **** Reference lengths
@@ -46,8 +46,10 @@ boundaries of the system are found by looking around the system for
 the lines where the number of black pixel is minimal.
 
 Once each system is found, they are each saved in an image.
+
+This step is implemented in =overscore/staffline/identification.clj=.
 **** Staff line identification and removal
-The staff line removal is done by using [[http://gamera.informatik.hsnr.de/index.html][Gamera's]] [[http://music-staves.sf.net/][music-staves]]
+The staff line removal is done by using [[http://gamera.informatik.hsnr.de/index.html][Gamera]]'s [[http://music-staves.sf.net/][music-staves]]
 plugin. A python script is simply called with the input image, and
 outputs the same image without the staffline (in an image), as well as
 the staff line positions (in a text file).
@@ -55,10 +57,17 @@ the staff line positions (in a text file).
 If no staff line were found in an image, it can be discarded since it
 is most likely not a relevant image (eg. some text, like the title of
 the partition).
+
+This step is implemented in =overscore/staffline/removal.clj= and
+calls the script =overscore/staffline/removal.py=.
 **** Improvements
 If the staff line removal does not work as expected because the image
 is skewed, a skew correction algorithm should be implemented in the
 [[Part 1: Image Preprocessing][preprocessing]].
+*** TODO Part 3: Symbol Recognition
+**** TODO Symbol segmentation
+**** TODO Symbol recognition
+*** Part 4: Musical Semantics
 * Bibliography
 The papers cited in this documentation are given in this section. For
 more papers about the topic of OMR, see =doc/design/design.pf=.
