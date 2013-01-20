@@ -41,7 +41,7 @@ them independently. This is done by a technique similar to the one
 described in [[Fujinaga1988][Fujinaga, 1988]].
 
 First, a y-projection of the pixel is done (see an example result in
-[[doc/yproj.png]]), and the systems are located by looking for five
+[[doc/yproj.png][doc/yproj.png]]), and the systems are located by looking for five
 distinct peaks of black pixels. Then, the boundaries of the system are
 found by looking around the system for the lines where the number of
 black pixel is minimal.
