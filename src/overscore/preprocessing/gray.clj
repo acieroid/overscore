@@ -15,9 +15,11 @@
   [^BufferedImage img]
   (let [out (BufferedImage. (.getWidth img) (.getHeight img)
                             BufferedImage/TYPE_BYTE_GRAY)]
-    (doseq [x (range (.getWidth img))
-            y (range (.getHeight img))]
-      (let [[r g b] (extract-rgb img x y)
-            grayval (+ (* 0.3 r) (* 0.59 g) (* 0.11 b))]
-        (.setRGB out x y (long grayval))))
-    out))
+    (copy-image img
+                (fn [x y rgb]
+                  (let [[r g b] (extract-rgb img rgb)
+                        grayval (+ (* 0.3 r) (* 0.59 g) (* 0.11 b))]
+                    (long grayval)))
+                :type BufferedImage/TYPE_BYTE_GRAY)))
+
+

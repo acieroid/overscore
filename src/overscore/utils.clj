@@ -107,11 +107,28 @@
 (defn extract-rgb
   "Extract the R, G and B values of a pixel in an image, return them
   as a vector"
-  [^BufferedImage img ^long x ^long y]
-  (let [pixel (.getRGB img x y)]
-    [(bit-and 0xFF (bit-shift-right pixel 16))
-     (bit-and 0xFF (bit-shift-right pixel 8))
-     (bit-and 0xFF pixel)]))
+  [^BufferedImage img ^long pixel]
+  [(bit-and 0xFF (bit-shift-right pixel 16))
+   (bit-and 0xFF (bit-shift-right pixel 8))
+   (bit-and 0xFF pixel)])
+
+;; TODO: there is probably a faster way than copying pixel by pixel
+(defn copy-image
+  "Copy a BufferedImage, setting each pixel to the value returned by
+  the given function and return the newly created image.
+
+  The function passed as argument should take three parameters: the x
+  and y position of the current pixel, and the data currently
+  associated with it (eg. its RGB color), which depends on the type of
+  the image."
+  [^BufferedImage img f & {:keys [type]
+                           :or {type BufferedImage/TYPE_BYTE_BINARY}}]
+  (let [out (BufferedImage. (.getWidth img) (.getHeight img)
+                            type)]
+    (doseq [x (range (.getWidth img))
+            y (range (.getHeight img))]
+      (.setRGB out x y (f x y (.getRGB img x y))))
+    out))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Filesystem utilities ;;;
