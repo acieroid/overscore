@@ -21,5 +21,3 @@
                         grayval (+ (* 0.3 r) (* 0.59 g) (* 0.11 b))]
                     (long grayval)))
                 :type BufferedImage/TYPE_BYTE_GRAY)))
-
-

@@ -38,5 +38,5 @@
     "preprocessing"
     (call-if (rest args) 3 preprocessing)
     "staffline"
-    (call-if (rest args) 1 staffline-processing)
+    (call-if (rest args) 1 #(staffline-processing % true))
     (usage)))
