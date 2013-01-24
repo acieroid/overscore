@@ -60,7 +60,7 @@ Once each system is found, they are each saved in an image.
 # (save chart "foo.png" :width 2745 :height 3611)
 # then assembled with the png of the sheet
 
-This step is implemented in =overscore/staffline/identification.clj=.
+This step is implemented in [[src/overscore/staffline/identification.clj][staffline/identification.clj]].
 **** Staff line identification and removal
 The staff line removal is done by using [[http://gamera.informatik.hsnr.de/index.html][Gamera]]'s [[http://music-staves.sf.net/][music-staves]]
 plugin. A python script is simply called with the input image, and
@@ -71,16 +71,28 @@ If no staff line were found in an image, it can be discarded since it
 is most likely not a relevant image (eg. some text, like the title of
 the partition).
 
-This step is implemented in =overscore/staffline/removal.clj= and
-calls the script =overscore/staffline/removal.py=.
+This step is implemented in [[src/overscore/staffline/removal.clj][staffline/removal.clj]] and calls the script
+[[src/overscore/staffline/removal.py][staffline/removal.py]].
 **** Improvements
 If the staff line removal does not work as expected because the image
 is skewed, a skew correction algorithm should be implemented in the
 [[Part 1: Image Preprocessing][preprocessing]].
 *** TODO Part 3: Symbol Recognition
 **** TODO Symbol segmentation
+The segmentation is done in a similar way as done in [[OpenOMR][OpenOMR]].
+***** Level-0 segmentation
+The first segmentation is done by finding consecutive columns which
+contains black pixels. The results are refined by:
+  1. Grouping close segments, which can happen for example in the case
+     of a dotted note
+  2. Not taking small segments, which are probably due to noise in the
+     scanned image.
+
+The level-0 segmentation is implemented in [[src/overscore/segmentation/level0.clj][segmentation/level0.clj]]. An
+example of level-0 segmentation result can be found in
+[[doc/level0-segments.png][doc/level0-segments.png]].
 **** TODO Symbol recognition
-*** Part 4: Musical Semantics
+*** TODO Part 4: Musical Semantics
 * Bibliography
 The papers cited in this documentation are given in this section. For
 more papers about the topic of OMR, see =doc/design/design.pdf=.
@@ -92,3 +104,6 @@ more papers about the topic of OMR, see =doc/design/design.pdf=.
 # <<Fujinaga1988>>
   - I. Fujinaga, /Optical Music Recognition using Projections/, 1988,
     [[http://digitool.library.mcgill.ca/thesisfile61870.pdf][link]].
+# <<OpenOMR>>
+  - A. Desaedeleer, /Reading Sheet Music/, 2006, [[http://sourceforge.net/projects/openomr/][link to OpenOMR]] (pdf
+    is included in the sources).
