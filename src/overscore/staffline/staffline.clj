@@ -20,9 +20,9 @@
                         :type BufferedImage/TYPE_INT_RGB)]
     ;; Color the staffline pixels in red
     ;; TODO: do it for staffline-height pixels of height
-    (doseq [y positions]
-      (doseq [x (range (.getWidth out))]
-        (.setRGB out x y 0xFF0000)))
+    (doseq [y positions
+            x (range (.getWidth out))]
+      (.setRGB out x y 0xFF0000))
     ;; Save the image
     (ImageIO/write out "png" (File. (str name "-debug.png")))))
 
