@@ -7,6 +7,8 @@
            javax.imageio.ImageIO
            java.io.File))
 
+(defrecord segment [start end])
+
 (defn find-basic-segments
   "Find the segments of black regions in a x-projection of an
   image. Return a list of pairs containing the start and end position
@@ -29,13 +31,13 @@
           (recur (rest proj) (inc i) segments start)
           ;; end of region
           (recur (rest proj) (inc i)
-                 (cons [start i] segments)
+                 (cons (->segment start i) segments)
                  -1))))))
 
 (defn segment-size
   "Return the size of a segment"
   [segment]
-  (- (second segment) (first segment)))
+  (- (:end segment) (:start segment)))
 
 (defn improve-segments
   "Improve the segments found by find-basic-segments in two way:
@@ -47,9 +49,21 @@
        lines. The segments dropped are those which have a size smaller
        than min-size"
   [segments min-size min-closeness]
-  (let [segments (filter #(> (segment-size %) min-size) segments)]
-    ;; TODO: merging
-    segments))
+  (let [grouped (reverse
+                 (reduce (fn
+                           ([] []) ; no segments
+                           ([st seg]
+                              (if (empty? st)
+                                [seg]
+                                (let [[last & tail] st]
+                                  (if (< (- (:start seg) (:end last)) min-closeness)
+                                    (cons (->segment
+                                           (:start last) (:end seg))
+                                          tail) ; merge
+                                    (cons seg st))))))
+                         [(first segments)] segments))
+        filtered (filter #(> (segment-size %) min-size) grouped)]
+    filtered))
 
 (defn color-level0-segments
   "Output a image where the level0 segments are colored, for debugging"
@@ -61,7 +75,7 @@
                             0x0))
                         :type BufferedImage/TYPE_INT_RGB)]
     (doseq [segment segments
-            x (range (first segment) (second segment))
+            x (range (:start segment) (:end segment))
             y (range (.getHeight out))]
       (.setRGB out x y (if (= (.getRGB img x y) -1)
                          0xAAFFAA ; color white in green in segments
@@ -74,7 +88,7 @@
   one system."
   [^BufferedImage img debug & {:keys [min-size min-closeness]
                                :or {min-size 8
-                                    min-closeness 3}}]
+                                    min-closeness 5}}]
   (let [data (projection img :x)
         segments (improve-segments (find-basic-segments data)
                                    min-size min-closeness)]
