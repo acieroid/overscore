@@ -25,9 +25,14 @@
   "Return the horizontal/vertical projection of black pixels for an
   image. Direction is either :x or :y, indicating the axis on which to
   project."
-  [^BufferedImage img direction]
-  (let [xs (range (.getWidth img))
-        ys (range (.getHeight img))]
+  [^BufferedImage img direction & {:keys [start-x end-x
+                                          start-y end-y]
+                                   :or {start-x 0
+                                        end-x (.getWidth img)
+                                        start-y 0
+                                        end-y (.getHeight img)}}]
+  (let [xs (range start-x end-x)
+        ys (range start-y end-y)]
     (apply vector
            (case direction
              :x
