@@ -78,9 +78,9 @@ If the staff line removal does not work as expected because the image
 is skewed, a skew correction algorithm should be implemented in the
 [[Part 1: Image Preprocessing][preprocessing]].
 *** TODO Part 3: Symbol Recognition
-**** TODO Symbol segmentation
+**** TODO Symbol Segmentation
 The segmentation is done in a similar way as done in [[OpenOMR][OpenOMR]].
-***** Level-0 segmentation
+***** Level-0 Segmentation
 The first segmentation is done by finding consecutive columns which
 contains black pixels. The results are refined by:
   1. Grouping close segments, which can happen for example in the case
@@ -91,6 +91,24 @@ contains black pixels. The results are refined by:
 The level-0 segmentation is implemented in [[src/overscore/segmentation/level0.clj][segmentation/level0.clj]]. An
 example of level-0 segmentation result can be found in
 [[doc/level0-segments.png][doc/level0-segments.png]].
+***** Note Head Detection
+For each level-0 segment, we need to know if it contains a note head
+or not. If it does not, it can skip level-1 segmentation.
+
+To detect if a segment contains note heads, the following algorithm is
+used (taken from [[OpenOMR][OpenOMR]]):
+  - For each column, find (if present) the biggest black run that is:
+    - Smaller than 3/2 of the staffspace height
+    - Bigger than 2 times the staffline height
+    Remember the columns where such runs are present.
+  - Find segments of columns having those black runs, such that the
+    lengths of the segment is at least half of the staffspace
+    height. Those segments correspond to the note heads.
+
+Segments having note heads in it are further decomposed into level-1
+segments. The others can directly go to the level-2 segmentation.
+***** Level-1 Segmentation
+***** Level-2 Segmentation
 **** TODO Symbol recognition
 *** TODO Part 4: Musical Semantics
 * Bibliography
