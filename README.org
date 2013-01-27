@@ -111,6 +111,9 @@ without further decomposition.
 
 The note head detection is implemented in [[src/overscore/segmentation/notehead.clj][segmentation/notehead.clj]].
 ***** Level-1 Segmentation
+Level-1 detection use the data computed by the note head detection:
+for each note head found, it creates a level-1 segment. The space
+between the note heads is also saved in a level-1 segment.
 ***** Level-2 Segmentation
 **** TODO Symbol recognition
 *** TODO Part 4: Musical Semantics

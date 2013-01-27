@@ -78,7 +78,7 @@
   [^BufferedImage img segment d n]
   (loop [columns (map #(column-max-run img segment % d n)
                       (range (segment-width segment)))
-         i 0
+         i (:start segment)
          result (transient [])]
     (if (empty? columns)
       (persistent! result)
