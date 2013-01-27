@@ -93,7 +93,7 @@ example of level-0 segmentation result can be found in
 [[doc/level0-segments.png][doc/level0-segments.png]].
 ***** Note Head Detection
 For each level-0 segment, we need to know if it contains a note head
-or not. If it does not, it can skip level-1 segmentation.
+or not.
 
 To detect if a segment contains note heads, the following algorithm is
 used (taken from [[OpenOMR][OpenOMR]]):
@@ -105,8 +105,11 @@ used (taken from [[OpenOMR][OpenOMR]]):
     lengths of the segment is at least half of the staffspace
     height. Those segments correspond to the note heads.
 
-Segments having note heads in it are further decomposed into level-1
-segments. The others can directly go to the level-2 segmentation.
+Segments having note heads in it are further decomposed into multiple
+level-1 segments. The others can directly be used as level-1 segments
+without further decomposition.
+
+The note head detection is implemented in [[src/overscore/segmentation/notehead.clj][segmentation/notehead.clj]].
 ***** Level-1 Segmentation
 ***** Level-2 Segmentation
 **** TODO Symbol recognition
