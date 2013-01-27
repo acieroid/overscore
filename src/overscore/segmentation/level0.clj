@@ -9,6 +9,28 @@
 
 (defrecord segment [start end])
 
+(defn segment-width
+  "Return the size of a segment"
+  [segment]
+  (- (:end segment) (:start segment)))
+
+(defn color-segments
+  "Output a image where the given segments are colored, for debugging"
+  [^BufferedImage img segments outfile color]
+  (let [out (copy-image img
+                        (fn [x y bw]
+                          (if (= bw -1)
+                            0xFFFFFF
+                            0x0))
+                        :type BufferedImage/TYPE_INT_RGB)]
+    (doseq [segment segments
+            x (range (:start segment) (:end segment))
+            y (range (.getHeight out))]
+      (.setRGB out x y (if (= (.getRGB img x y) -1)
+                         color ; color white in 'color' in segments
+                         0x0)))
+    (ImageIO/write out "png" (File. outfile))))
+
 (defn find-basic-segments
   "Find the segments of black regions in a x-projection of an
   image. Return a list of pairs containing the start and end position
@@ -33,11 +55,6 @@
           (recur (rest proj) (inc i)
                  (cons (->segment start i) segments)
                  -1))))))
-
-(defn segment-width
-  "Return the size of a segment"
-  [segment]
-  (- (:end segment) (:start segment)))
 
 (defn improve-segments
   "Improve the segments found by find-basic-segments in two way:
@@ -65,23 +82,6 @@
         filtered (filter #(> (segment-width %) min-size) grouped)]
     filtered))
 
-(defn color-level0-segments
-  "Output a image where the level0 segments are colored, for debugging"
-  [^BufferedImage img segments]
-  (let [out (copy-image img
-                        (fn [x y bw]
-                          (if (= bw -1)
-                            0xFFFFFF
-                            0x0))
-                        :type BufferedImage/TYPE_INT_RGB)]
-    (doseq [segment segments
-            x (range (:start segment) (:end segment))
-            y (range (.getHeight out))]
-      (.setRGB out x y (if (= (.getRGB img x y) -1)
-                         0xAAFFAA ; color white in green in segments
-                         0x0)))
-    (ImageIO/write out "png" (File. "/tmp/level0-segments-debug.png"))))
-
 (defn level0-segments
   "Return a sequence of level 0 segments (containing the start and end
   position of each segment, as a pair), given an image containing only
@@ -93,6 +93,6 @@
         segments (improve-segments (find-basic-segments data)
                                    min-size min-closeness)]
     (when debug
-      (color-level0-segments img segments))
+      (color-segments img segments "/tmp/level0-segments-debug.png" 0xAAFFAA))
     segments))
 
