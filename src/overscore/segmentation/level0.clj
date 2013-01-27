@@ -34,7 +34,7 @@
                  (cons (->segment start i) segments)
                  -1))))))
 
-(defn segment-size
+(defn segment-width
   "Return the size of a segment"
   [segment]
   (- (:end segment) (:start segment)))
@@ -62,7 +62,7 @@
                                           tail) ; merge
                                     (cons seg st))))))
                          [(first segments)] segments))
-        filtered (filter #(> (segment-size %) min-size) grouped)]
+        filtered (filter #(> (segment-width %) min-size) grouped)]
     filtered))
 
 (defn color-level0-segments
