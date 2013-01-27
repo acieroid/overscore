@@ -74,7 +74,7 @@
 
 (defn detect-notes
   "Similar to has-note and notes-graph, but return the start and end
-  positions of the note heads"
+  positions of the note heads in a segment structure"
   [^BufferedImage img segment d n]
   (loop [columns (map #(column-max-run img segment % d n)
                       (range (segment-width segment)))
@@ -88,5 +88,5 @@
           (recur (drop run-length columns)
                  (+ i run-length)
                  (if (>= run-length (/ d 2))
-                   (conj! result [i (+ i run-length)])
+                   (conj! result (->segment i (+ i run-length)))
                    result)))))))
