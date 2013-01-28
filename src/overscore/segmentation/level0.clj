@@ -2,49 +2,14 @@
 ;;; regions on the x-projection of a system (as in OpenOMR).
 (ns overscore.segmentation.level0
   (:use overscore.proj
-        overscore.utils)
-  (:import java.awt.image.BufferedImage
-           javax.imageio.ImageIO
-           java.io.File))
-
-(defrecord segment [start end])
-
-(defn segment-width
-  "Return the size of a segment"
-  [segment]
-  (- (:end segment) (:start segment)))
-
-(defn color-segments
-  "Output a image where the given segments are colored, for debugging"
-  [^BufferedImage img segments & {:keys [outfile color other-color start-x]
-                                  :or {outfile "/tmp/segments.png"
-                                       color 0xAAFFAA
-                                       other-color false
-                                       start-x 0}}]
-  (let [out (copy-image img
-                        (fn [x y bw]
-                          (if (= bw -1)
-                            0xFFFFFF
-                            0x0))
-                        :type BufferedImage/TYPE_INT_RGB)]
-    (doall
-     (map (fn [segment color]
-            (doseq [x (range (:start segment) (inc (:end segment)))
-                    y (range (.getHeight out))]
-              (.setRGB out (+ start-x x) y
-                       (if (= (.getRGB img (+ start-x x) y) -1)
-                         color    ; color white in 'color' in segments
-                         0x0))))
-          segments (if other-color
-                     (cycle [color other-color])
-                     (repeat color))))
-    (ImageIO/write out "png" (File. outfile))))
+        overscore.segmentation.segment)
+  (:import java.awt.image.BufferedImage))
 
 (defn find-basic-segments
   "Find the segments of black regions in a x-projection of an
   image. Return a list of pairs containing the start and end position
   of each segment"
-  [proj]
+  [^BufferedImage img proj]
   (loop [proj proj
          i 0
          segments []
@@ -62,7 +27,7 @@
           (recur (rest proj) (inc i) segments start)
           ;; end of region
           (recur (rest proj) (inc i)
-                 (cons (->segment start i) segments)
+                 (cons (->segment start i 0 (dec (.getHeight img))) segments)
                  -1))))))
 
 (defn improve-segments
@@ -82,9 +47,11 @@
                               (if (empty? st)
                                 [seg]
                                 (let [[last & tail] st]
-                                  (if (< (- (:start seg) (:end last)) min-closeness)
+                                  (if (< (- (:start-x seg) (:end-x last))
+                                         min-closeness)
                                     (cons (->segment
-                                           (:start last) (:end seg))
+                                           (:start-x last) (:end-x seg)
+                                           (:start-y seg) (:end-y seg))
                                           tail) ; merge
                                     (cons seg st))))))
                          [(first segments)] segments))
@@ -99,7 +66,7 @@
                                :or {min-size 8
                                     min-closeness 5}}]
   (let [data (projection img :x)
-        segments (improve-segments (find-basic-segments data)
+        segments (improve-segments (find-basic-segments img data)
                                    min-size min-closeness)]
     (when debug
       (color-segments img segments

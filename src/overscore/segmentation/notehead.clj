@@ -3,7 +3,7 @@
   (:use overscore.proj
         overscore.utils
         overscore.preprocessing.rle
-        overscore.segmentation.level0)
+        overscore.segmentation.segment)
   (:import java.awt.image.BufferedImage))
 
 ;; TODO: in practice, it works better with 4n instead of n given as argument
@@ -14,7 +14,7 @@
 
    If it is the case, return true, else false"
   [^BufferedImage img segment column d n]
-  (let [rle (column-rle img (+ (:start segment) column))]
+  (let [rle (column-rle img (+ (:start-x segment) column))]
     (some #(and (>= % (* 2 n))
                 (<= % (* 3/2 d)))
           rle)))
@@ -23,7 +23,7 @@
   "Like column-has-run, but return the maximum run that satisfies the
   conditions given in column-has-run"
   [^BufferedImage img segment column d n]
-  (let [rle (column-rle img (+ (:start segment) column))
+  (let [rle (column-rle img (+ (:start-x segment) column))
         filtered (filter #(and (>= % (* 2 n))
                                (<= % (* 3/2 d)))
                          rle)]
@@ -78,7 +78,7 @@
   [^BufferedImage img segment d n]
   (loop [columns (map #(column-max-run img segment % d n)
                       (range (segment-width segment)))
-         i (:start segment)
+         i (:start-x segment)
          result (transient [])]
     (if (empty? columns)
       (persistent! result)
@@ -88,5 +88,6 @@
           (recur (drop run-length columns)
                  (+ i run-length)
                  (if (>= run-length (/ d 2))
-                   (conj! result (->segment i (+ i run-length)))
+                   (conj! result (->segment i (+ i run-length)
+                                            0 (dec (.getHeight img))))
                    result)))))))
