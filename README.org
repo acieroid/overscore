@@ -20,9 +20,9 @@ necessary.
 
 It is done in two steps:
   1. If the image is in color, convert it into grayscale using the
-     [[http://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale][luma component]], implemented in =overscore/preprocessing/gray.clj=.
+     [[http://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale][luma component]], implemented in [[overscore/tree/master/src/overscore/preprocessing/gray.clj][preprocessing/gray.clj]].
   2. Convert the grayscale image into binary using
-     [[http://en.wikipedia.org/wiki/Otsu%27s_method][Otsu's method]], implemented in =overscore/preprocessing/otsu.clj=.
+     [[http://en.wikipedia.org/wiki/Otsu%27s_method][Otsu's method]], implemented in [[overscore/tree/master/src/overscore/preprocessing/otsu.clj][preprocessing/otsu.clj]].
 **** Reference lengths
 Once the image is binarized, the reference lengths (staff line and
 staff space height) are found by analyzing the most common vertical
@@ -41,7 +41,7 @@ them independently. This is done by a technique similar to the one
 described in [[Fujinaga1988][Fujinaga, 1988]].
 
 First, a y-projection of the pixel is done (see an example result in
-[[overscore/doc/yproj.png][doc/yproj.png]]), and the systems are located by looking for five
+[[overscore/tree/master/src/overscore/doc/yproj.png][doc/yproj.png]]), and the systems are located by looking for five
 distinct peaks of black pixels. Then, the boundaries of the system are
 found by looking around the system for the lines where the number of
 black pixel is minimal.
@@ -60,7 +60,7 @@ Once each system is found, they are each saved in an image.
 # (save chart "foo.png" :width 2745 :height 3611)
 # then assembled with the png of the sheet
 
-This step is implemented in [[overscore/src/overscore/staffline/identification.clj][staffline/identification.clj]].
+This step is implemented in [[overscore/tree/master/src/overscore/staffline/identification.clj][staffline/identification.clj]].
 **** Staff line identification and removal
 The staff line removal is done by using [[http://gamera.informatik.hsnr.de/index.html][Gamera]]'s [[http://music-staves.sf.net/][music-staves]]
 plugin. A python script is simply called with the input image, and
@@ -71,14 +71,14 @@ If no staff line were found in an image, it can be discarded since it
 is most likely not a relevant image (eg. some text, like the title of
 the partition).
 
-This step is implemented in [[overscore/src/overscore/staffline/removal.clj][staffline/removal.clj]] and calls the script
-[[overscore/src/overscore/staffline/removal.py][staffline/removal.py]].
+This step is implemented in [[overscore/tree/master/src/overscore/staffline/removal.clj][staffline/removal.clj]] and calls the script
+[[overscore/tree/master/src/overscore/staffline/removal.py][staffline/removal.py]].
 **** Improvements
 If the staff line removal does not work as expected because the image
 is skewed, a skew correction algorithm should be implemented in the
 [[Part 1: Image Preprocessing][preprocessing]].
 *** TODO Part 3: Symbol Recognition
-**** TODO Symbol Segmentation
+**** Symbol Segmentation
 The segmentation is done in a similar way as done in [[OpenOMR][OpenOMR]].
 ***** Level-0 Segmentation
 The first segmentation is done by finding consecutive columns which
@@ -88,9 +88,9 @@ contains black pixels. The results are refined by:
   2. Not taking small segments, which are probably due to noise in the
      scanned image.
 
-The level-0 segmentation is implemented in [[overscore/src/overscore/segmentation/level0.clj][segmentation/level0.clj]]. An
+The level-0 segmentation is implemented in [[overscore/tree/master/src/overscore/segmentation/level0.clj][segmentation/level0.clj]]. An
 example of level-0 segmentation result can be found in
-[[overscore/doc/level0-segments.png][doc/level0-segments.png]].
+[[overscore/tree/master/doc/level0-segments.png][doc/level0-segments.png]].
 ***** Note Head Detection
 For each level-0 segment, we need to know if it contains a note head
 or not.
@@ -109,16 +109,22 @@ Segments having note heads in it are further decomposed into multiple
 level-1 segments. The others can directly be used as level-1 segments
 without further decomposition.
 
-The note head detection is implemented in [[overscore/src/overscore/segmentation/notehead.clj][segmentation/notehead.clj]].
+The note head detection is implemented in [[overscore/tree/master/src/overscore/segmentation/notehead.clj][segmentation/notehead.clj]].
 ***** Level-1 Segmentation
-Level-1 detection use the data computed by the note head detection:
+Level-1 segmentation use the data computed by the note head detection:
 for each note head found, it creates a level-1 segment. The space
 between the note heads is also saved in a level-1 segment.
 
-Level-1 segmentation is implemented in [[overscore/src/overscore/segmentation/level1.clj][segmentation/level1.clj]] and an
+Level-1 segmentation is implemented in [[overscore/tree/master/src/overscore/segmentation/level1.clj][segmentation/level1.clj]] and an
 example output on level-0 segments that contains notes can be found in
-[[overscore/doc/level1-segments.png][doc/level1-segments.png]].
+[[overscore/tree/master/doc/level1-segments.png][doc/level1-segments.png]].
 ***** Level-2 Segmentation
+The level-2 segmentation separates the symbol contained in each
+level-1 segment vertically. The resulting segments should then
+correspond to the musical features (eg. a note head, a sharp, ...) and
+can then be classified.
+
+Level-2 segmentation is implemented in [[overscore/tree/master/src/segmentation/level2.clj][segmentation/level2.clj]].
 **** TODO Symbol recognition
 *** TODO Part 4: Musical Semantics
 * Bibliography
