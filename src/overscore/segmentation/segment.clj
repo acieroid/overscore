@@ -19,10 +19,11 @@
 
 (defn color-segments
   "Output a image where the given segments are colored, for debugging"
-  [^BufferedImage img segments & {:keys [outfile color other-color start-x]
+  [^BufferedImage img segments & {:keys [outfile color other-color black]
                                   :or {outfile "/tmp/segments.png"
                                        color 0xAAFFAA
-                                       other-color false}}]
+                                       other-color false
+                                       black 0x0}}]
   (let [out (copy-image img
                         (fn [x y bw]
                           (if (= bw -1)
@@ -36,7 +37,7 @@
               (.setRGB out x y
                        (if (= (.getRGB img x y) -1)
                          color    ; color white in 'color' in segments
-                         0x0))))
+                         black))))
           segments (if other-color
                      (cycle [color other-color])
                      (repeat color))))
