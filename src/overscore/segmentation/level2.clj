@@ -30,7 +30,9 @@
            result
            (conj! result
                   (->segment (:start-x segment) (:end-x segment)
-                             cur-start cur-pos))))
+                             cur-start (if (== cur-pos (.getHeight img))
+                                         (dec cur-pos)
+                                         cur-pos)))))
         (if (== (first proj) 0)
           (let [zeros (count (take-while zero? proj))
                 new-pos (+ cur-pos zeros)]
