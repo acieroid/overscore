@@ -22,10 +22,12 @@
         out (temp-name "overscore-omr-out")
         pos (temp-name "overscore-omr-pos")]
     (ImageIO/write img-in "png" (File. in))
-    (sh python script in out pos)
-    (let [img-out (ImageIO/read (File. out)) ; output image
-          pos-out (read-string (slurp pos))] ; staffline positions
-      (delete-file in)
-      (delete-file out)
-      (delete-file pos)
-      [img-out pos-out])))
+    (let [result (sh python script in out pos)]
+      (if (not (== (:exit result) 1))
+        (let [img-out (ImageIO/read (File. out)) ; output image
+              pos-out (read-string (slurp pos))] ; staffline positions
+          (delete-file in)
+          (delete-file out)
+          (delete-file pos)
+          [img-out pos-out])
+        (throw (Exception. (str "Python script failed: " (:err result))))))))
