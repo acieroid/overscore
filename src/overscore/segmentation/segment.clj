@@ -17,6 +17,10 @@
   [segment]
   (- (:end-y segment) (:start-y segment)))
 
+(defn random-color
+  []
+  (long (rand 0xFFFFFF)))
+
 (defn color-segments
   "Output a image where the given segments are colored, for debugging"
   [^BufferedImage img segments & {:keys [outfile color other-color
