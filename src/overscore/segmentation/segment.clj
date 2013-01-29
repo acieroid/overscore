@@ -38,12 +38,13 @@
                         :type BufferedImage/TYPE_INT_RGB)]
     (doall
      (map (fn [segment color black]
-            (doseq [x (range (:start-x segment) (inc (:end-x segment)))
-                    y (range (:start-y segment) (inc (:end-y segment)))]
-              (.setRGB out x y
-                       (if (= (.getRGB img x y) -1)
-                         color    ; color white in 'color' in segments
-                         black))))
+            (let [black (random-color)]
+              (doseq [x (range (:start-x segment) (inc (:end-x segment)))
+                      y (range (:start-y segment) (inc (:end-y segment)))]
+                (.setRGB out x y
+                         (if (= (.getRGB img x y) -1)
+                           color    ; color white in 'color' in segments
+                           black)))))
           segments
           (if other-color
             (cycle [color other-color])
