@@ -15,7 +15,7 @@
   list on L1 segments"
   [^BufferedImage img segment heads]
   (if (empty? heads)
-    [segment] ; no note head
+    []
     (loop [heads heads
            segments (transient [])
            last-end (dec (:start-x segment))]
