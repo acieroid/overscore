@@ -8,7 +8,7 @@
   (:import java.awt.image.BufferedImage))
 
 (def stem-factor 4)
-(def d-factor 0.3)
+(def max-zeros-factor 0.3)
 
 (defn create-level2-segments
   "Create L2 segments for a given L1 segment. Do so by doing a
@@ -41,7 +41,7 @@
           ;; Handle zeros
           (let [zeros (count (take-while zero? proj))
                 new-pos (+ cur-pos zeros)]
-            (if (> zeros (* d-factor d))
+            (if (> zeros (* max-zeros-factor d))
               ;; New segment
               (recur (drop zeros proj) new-pos new-pos
                      (conj! result
