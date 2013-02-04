@@ -1,10 +1,10 @@
 ;;; Do the whole segmentation process
-(ns overscore.segmentation.segmentation
-  (:use overscore.segmentation.segment
-        overscore.segmentation.level0
-        overscore.segmentation.notehead
-        overscore.segmentation.level1
-        overscore.segmentation.level2)
+(ns overscore.recognition.segmentation.segmentation
+  (:use overscore.recognition.segmentation.segment
+        overscore.recognition.segmentation.level0
+        overscore.recognition.segmentation.notehead
+        overscore.recognition.segmentation.level1
+        overscore.recognition.segmentation.level2)
   (:import java.awt.image.BufferedImage
            javax.imageio.ImageIO
            java.io.File))

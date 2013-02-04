@@ -1,10 +1,10 @@
 ;;; Decompose L1 segments vertically into L2 segments, that can then
 ;;; be classified.
-(ns overscore.segmentation.level2
+(ns overscore.recognition.segmentation.level2
   (:use overscore.proj
         overscore.utils
         overscore.preprocessing.rle
-        overscore.segmentation.segment)
+        overscore.recognition.segmentation.segment)
   (:import java.awt.image.BufferedImage))
 
 (def stem-factor 4)

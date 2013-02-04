@@ -1,8 +1,8 @@
 ;;; Detect note heads in a level-0 segment by looking at vertical black runs
-(ns overscore.segmentation.notehead
+(ns overscore.recognition.segmentation.notehead
   (:use overscore.proj
         overscore.utils
-        overscore.segmentation.segment)
+        overscore.recognition.segmentation.segment)
   (:import java.awt.image.BufferedImage))
 
 ;; The different factors that are used by the method

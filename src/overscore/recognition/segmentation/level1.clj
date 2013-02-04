@@ -6,8 +6,8 @@
 ;;;         (map #(create-level1-segments %(detect-notes img % 16 8))
 ;;;         (level0-segments img false))
 ;;;  :other-color 0xFFAAAA)
-(ns overscore.segmentation.level1
-  (:use overscore.segmentation.segment)
+(ns overscore.recognition.segmentation.level1
+  (:use overscore.recognition.segmentation.segment)
   (:import java.awt.image.BufferedImage))
 
 (defn create-level1-segments

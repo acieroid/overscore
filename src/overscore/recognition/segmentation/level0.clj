@@ -1,8 +1,8 @@
 ;;; Do the level-0 segmentation by finding sequence of connected black
 ;;; regions on the x-projection of a system (as in OpenOMR).
-(ns overscore.segmentation.level0
+(ns overscore.recognition.segmentation.level0
   (:use overscore.proj
-        overscore.segmentation.segment)
+        overscore.recognition.segmentation.segment)
   (:import java.awt.image.BufferedImage))
 
 (defn find-basic-segments

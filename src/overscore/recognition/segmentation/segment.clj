@@ -1,5 +1,5 @@
 ;;; Defines the data structure that will represent the segments
-(ns overscore.segmentation.segment
+(ns overscore.recognition.segmentation.segment
   (:use overscore.utils)
   (:import java.awt.image.BufferedImage
            javax.imageio.ImageIO
