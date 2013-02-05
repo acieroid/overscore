@@ -1,8 +1,7 @@
 ;;; Tool to convert Audiveris' training set files (in XML) to bitmaps,
 ;;; usable by overscore
-
 (ns overscore.tools.audiveris
-  (:use [overscore.musicxml :only [parse-int]])
+  (:use overscore.utils)
   (:require [clojure.xml :as xml]
             [clojure.string :as string])
   (:import (java.awt.image BufferedImage)
@@ -110,7 +109,7 @@
   "Convert an XML representation to an image"
   [in out]
   (let [white 0xFFFFFF
-        xml (xml/parse in)
+        xml (xml/parse (File. in))
         original-runs (extract-all-runs xml)
         [x y width height] (find-dimensions original-runs)
 
@@ -159,4 +158,5 @@
             (try
               (to-image filename (output-filename out (.getName file) filename))
               (catch Exception e
+                (println e)
                 (println "Failed:" filename (.getMessage e))))))))))
