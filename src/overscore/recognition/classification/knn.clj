@@ -11,9 +11,15 @@
   [^BufferedImage img segment & {:keys [k distance]
                                  :or {k 3
                                       distance hausdorff-distance}}]
-  (let [neighbours (take k (sort-by #(distance img segment %) training-set))
-        most-frequent-class (first
-                             (partial max-key second
-                                      (frequencies
-                                       (map :class neighbours))))]
-    most-frequent-class))
+  (let [neighbours (take k (sort-by
+                            #(distance img segment (:image %))
+                            @training-set))]
+    (if (empty? neighbours)
+      ;; No neighbour (should not happen if the training set is not empty)
+      :empty
+      ;; Return the most frequent class within the neighbours
+      (first
+       (apply
+        (partial max-key second)
+        (frequencies
+         (map :class neighbours)))))))

@@ -3,23 +3,6 @@
   (:use overscore.recognition.segmentation.segment)
   (:import java.awt.image.BufferedImage))
 
-(defn hausdorff-distance
-  "Compute the undirected Hausdorff distance between two image. The
-  template image is an element from the training set, and the other
-  image is represented by a (L2) segment of an image"
-  [^BufferedImage image segment template]
-  (let [tw (.getWidth template)
-        th (.getHeight template)
-        tf #(.getRGB template %1 %2)
-        sw (segment-width segment)
-        sh (segment-height segment)
-        sf #(.getRGB image
-                     (+ (:start-x segment) %1)
-                     (+ (:start-y segment) %2))]
-    (max
-     (directed-hausdorff-distance tw th tf sw sh sf)
-     (directed-hausdorff-distance sw sh sf tw th tf))))
-
 (defrecord point [x y])
 
 (defn point-distance
@@ -39,7 +22,7 @@
     (if (< y h)
       (if (< x w)
         (recur (inc x) (inc y)
-               (if (not (== (f x y)) -1)
+               (if (not (== (f x y) -1))
                  (conj! res (->point x y))
                  res))
         (recur 0 (inc y) res))
@@ -51,7 +34,25 @@
   given the coordinates in the image"
   [aw ah af bw bh bf]
   (reduce max
-          (map (reduce min
-                       (map point-distance
-                            (black-points bw bh bf)))
+          (map #(reduce min
+                        (map point-distance
+                             (repeat %)
+                             (black-points bw bh bf)))
                (black-points aw ah af))))
+
+(defn hausdorff-distance
+  "Compute the undirected Hausdorff distance between two image. The
+  template image is an element from the training set, and the other
+  image is represented by a (L2) segment of an image"
+  [^BufferedImage image segment template]
+  (let [tw (.getWidth template)
+        th (.getHeight template)
+        tf #(.getRGB template %1 %2)
+        sw (segment-width segment)
+        sh (segment-height segment)
+        sf #(.getRGB image
+                     (+ (:start-x segment) %1)
+                     (+ (:start-y segment) %2))]
+    (max
+     (directed-hausdorff-distance tw th tf sw sh sf)
+     (directed-hausdorff-distance sw sh sf tw th tf))))
