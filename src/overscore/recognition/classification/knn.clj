@@ -12,7 +12,7 @@
                                  :or {k 3
                                       distance hausdorff-distance}}]
   (let [neighbours (take k (sort-by
-                            #(distance img segment (:image %))
+                            #(distance img segment %)
                             @training-set))]
     (if (empty? neighbours)
       ;; No neighbour (should not happen if the training set is not empty)

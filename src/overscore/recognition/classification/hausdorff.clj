@@ -21,7 +21,7 @@
          y 0
          v v
          res (transient [])]
-    (if (< y h)
+    (if (and (not (empty? v)) (< y h))
       (if (< x w)
         (recur (inc x) (inc y) (rest v)
                (if (first v)
