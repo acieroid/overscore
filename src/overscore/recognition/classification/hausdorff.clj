@@ -35,12 +35,18 @@
   their size (width, height) and a function that returns a pixel value
   given the coordinates in the image"
   [aw ah av bw bh bv]
-  (reduce max
-          (map #(reduce min
-                        (map point-distance
-                             (repeat %)
-                             (black-points bw bh bv)))
-               (black-points aw ah av))))
+  (let [distances
+        (map #(let [distances-with
+                    (map point-distance
+                         (repeat %)
+                         (black-points bw bh bv))]
+                (if (empty? distances-with)
+                  0
+                  (reduce min distances-with)))
+             (black-points aw ah av))]
+    (if (empty? distances)
+      1000 ; big value
+      (reduce max distances))))
 
 (defn hausdorff-distance
   "Compute the undirected Hausdorff distance between two image. The

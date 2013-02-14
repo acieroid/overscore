@@ -4,7 +4,8 @@
         overscore.generator
         overscore.tools.audiveris
         overscore.preprocessing.preprocessing
-        overscore.staffline.staffline))
+        overscore.staffline.staffline
+        overscore.recognition.segmentation.segmentation))
 
 (defn usage []
   (println

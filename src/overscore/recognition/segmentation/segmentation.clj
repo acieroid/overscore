@@ -10,6 +10,7 @@
            javax.imageio.ImageIO
            java.io.File))
 
+;;; TODO: drop the empty, really tiny, and blank segments
 (defn find-segments
   "Do the segmentation process and return the resulting L2 segments. d
   is the staffspace height and n is the staffline height."

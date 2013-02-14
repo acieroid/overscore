@@ -7,7 +7,8 @@
   (:import java.awt.image.BufferedImage))
 
 (defn classify
-  "Classify a symbol contained in a segment of an image"
+  "Classify a symbol contained in a segment of an image. Returns its
+  class"
   [^BufferedImage img segment & {:keys [k distance]
                                  :or {k 3
                                       distance hausdorff-distance}}]

@@ -41,6 +41,6 @@
         binary (if (is-binary grayscale) grayscale (binarize grayscale))
         references (rle binary)]
     (ImageIO/write binary "png" (File. out-img))
-    (write-vector f references)))
+    (write-vector out-ref references)))
 
 
