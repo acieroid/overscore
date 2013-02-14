@@ -1,6 +1,7 @@
 ;;; Implement the prerprocessing step of the OMR system.
 (ns overscore.preprocessing.preprocessing
-  (:use overscore.preprocessing.gray
+  (:use overscore.tools.files
+        overscore.preprocessing.gray
         overscore.preprocessing.otsu
         overscore.preprocessing.rle
         clojure.java.io)
@@ -40,8 +41,6 @@
         binary (if (is-binary grayscale) grayscale (binarize grayscale))
         references (rle binary)]
     (ImageIO/write binary "png" (File. out-img))
-    ;; TODO: have something in utils.clj to handle text file read/write
-    (with-open [f (writer out-ref)]
-      (.write f (str references)))))
+    (write-vector f references)))
 
 
