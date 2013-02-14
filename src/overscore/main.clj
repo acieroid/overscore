@@ -43,4 +43,6 @@
     (call-if (rest args) 3 preprocessing)
     "staffline"
     (call-if (rest args) 1 #(staffline-processing % true))
+    "segmentation"
+    (call-if (rest args) 3 segmentation)
     (usage)))
