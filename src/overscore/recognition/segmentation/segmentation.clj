@@ -1,6 +1,7 @@
 ;;; Do the whole segmentation process
 (ns overscore.recognition.segmentation.segmentation
-  (:use overscore.recognition.segmentation.segment
+  (:use overscore.tools.files
+        overscore.recognition.segmentation.segment
         overscore.recognition.segmentation.level0
         overscore.recognition.segmentation.notehead
         overscore.recognition.segmentation.level1
@@ -9,7 +10,7 @@
            javax.imageio.ImageIO
            java.io.File))
 
-(defn segmentation
+(defn find-segments
   "Do the segmentation process and return the resulting L2 segments. d
   is the staffspace height and n is the staffline height."
   [in d n debug]
@@ -38,3 +39,17 @@
                       :black 0xFF0000
                       :other-black 0x00FF00))
     (concat l2-notes l2-symbols)))
+
+(defn segmentation
+  "Do the segmentation process, writing all the segments found in
+  out-segments as a list of 4 elements vectors ([start-x start-y end-x
+  end-y])"
+  [in-img in-refs out-segments]
+  (let [[d n] (read-vector in-refs)
+        segments (find-segments in-img d n false)
+        segments-vectors (map (fn [seg] [:start-x seg
+                                         :start-y seg
+                                         :end-x seg
+                                         :end-y seg])
+                              segments)]
+    (write-vector out-segments segments-vectors)))
