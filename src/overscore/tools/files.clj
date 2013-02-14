@@ -15,4 +15,5 @@
   "Write a vector to a file"
   [file vec]
   (with-open [f (writer file)]
-      (.write f (str vec))))
+    (binding [*out* f]
+      (println vec))))

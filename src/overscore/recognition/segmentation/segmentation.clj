@@ -47,9 +47,9 @@
   [in-img in-refs out-segments]
   (let [[d n] (read-vector in-refs)
         segments (find-segments in-img d n false)
-        segments-vectors (map (fn [seg] [:start-x seg
-                                         :start-y seg
-                                         :end-x seg
-                                         :end-y seg])
+        segments-vectors (map (fn [seg] [(:start-x seg)
+                                         (:start-y seg)
+                                         (:end-x seg)
+                                         (:end-y seg)])
                               segments)]
     (write-vector out-segments segments-vectors)))
