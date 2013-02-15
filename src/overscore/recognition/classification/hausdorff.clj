@@ -8,7 +8,7 @@
 
 (defn point-distance
   "Compute the (squared) distance between two points"
-  [a b]
+  [^point a ^point b]
   (let [dx (- (:x a) (:x b))
         dy (- (:y a) (:y b))]
     (+ (* dx dx) (* dy dy))))
@@ -16,11 +16,11 @@
 (defn black-points
   "Return the list of black points in an image (described by its
   width, height and pixel vector"
-  [w h v]
+  [^long w ^long h ^clojure.lang.PersistentVector v]
   (loop [x 0
          y 0
-         v v
-         res (transient [])]
+         ^clojure.lang.PersistentVector v v
+         ^clojure.lang.PersistentVector$TransientVector res (transient [])]
     (if (and (not (empty? v)) (< y h))
       (if (< x w)
         (recur (inc x) (inc y) (rest v)
