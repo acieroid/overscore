@@ -79,7 +79,13 @@ is skewed, a skew correction algorithm should be implemented in the
 [[Part 1: Image Preprocessing][preprocessing]].
 *** Part 3: Symbol Recognition
 **** Symbol Segmentation
-The segmentation is done in a similar way as done in [[OpenOMR][OpenOMR]].
+The segmentation is done in a similar way as done in [[OpenOMR][OpenOMR]]. All the
+sub parts of the segmentation process are assembled in
+[[overscore/tree/master/src/recognition/segmentation/segmentation.clj][recognition/segmentation/segmentation.clj]], and takes as input a path
+to an image (output by the preprocessing step), a path to a text files
+containing the reference lengths (also part of the output of the
+preprocessing step). It outputs all the segments represented as a
+vector of 4-element vectors in a text file.
 ***** Level-0 Segmentation
 The first segmentation is done by finding consecutive columns which
 contains black pixels. The results are refined by:
@@ -143,6 +149,14 @@ The k-nearest neighbor algorithm is implemented in
 [[overscore/tree/master/src/recognition/classification/knn.clj][recognition/classification/knn.clj]], and currently uses the [[http://en.wikipedia.org/wiki/Hausdorff_distance][Hausdorff
 distance]] to compute the distance between two images. The Hausdorff
 distance is implemented in [[overscore/tree/master/src/recognition/classification/hausdorff.clj][recognition/classification/hausdorff.clj]].
+
+All the parts of the classification step are assembled in
+[[overscore/tree/master/src/recognition/classification/classification.clj][recognition/classification/classification.clj]], and takes as input the
+image (output by the preprocessing step) and a file describing the
+segments (output by the segmentation step), and outputs a file
+describing the class of each segment (as a vector of 5-element
+vectors, where the 4 first elements are the segment description and
+the last element is the class (as a symbol) of the vector)
 **** Improvements
 The segmentation might be improved by fine tuning the parameters. The
 level-0 and level-1 segmentation works quite accurately, but the
