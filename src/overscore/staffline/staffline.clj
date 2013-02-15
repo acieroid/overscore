@@ -26,6 +26,13 @@
     ;; Save the image
     (ImageIO/write out "png" (File. (str name "-debug.png")))))
 
+(defn get-name
+  "Return the name for the image of the nth system found in the file
+   name (eg. the first staff in foo.png will have the name foo-1.png"
+  [name n]
+  (let [[_ basename ext] (re-find #"([^\.]+)\.(.+)" name)]
+    (str basename "-" n ".png")))
+
 (defn staffline-processing
   "Performs:
      1. Identify and isolate the systems, each system in a different image
@@ -49,7 +56,7 @@
           (when debug
             (color-stafflines (first imgs) pos (str in "-" i)))
           (when (not (empty? pos))
-            (ImageIO/write nostaff "png" (File. (str in "-" i ".png")))
+            (ImageIO/write nostaff "png" (File. (get-name in i)))
             (with-open [f (writer (str in "-" i ".txt"))]
               (.write f (str pos)))))
         (recur (rest imgs) (inc i))))))
