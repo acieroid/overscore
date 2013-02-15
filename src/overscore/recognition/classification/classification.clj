@@ -9,7 +9,8 @@
 (defn classification
   "Classify all the symbols found by the segmentation process in an
   image"
-  [in-img in-segments out]
+  [training-set-dir in-img in-segments out]
+  (load-training-set-images training-set-dir)
   (let [img (ImageIO/read (File. in-img))
         segments-vectors (read-vector in-segments)
         segments (map (fn [[sx sy ex ey]]
