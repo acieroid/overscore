@@ -15,8 +15,7 @@
         segments (map (fn [[sx sy ex ey]]
                         (->segment sx sy ex ey))
                       segments-vectors)
-        classes (map #(let [x 0]
-                        (classify img %)) segments)
+        classes (map #(classify img %) segments)
         output (map (fn [seg class] [(:start-x seg)
                                      (:start-y seg)
                                      (:end-x seg)

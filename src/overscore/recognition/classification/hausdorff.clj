@@ -35,17 +35,19 @@
   their size (width, height) and a function that returns a pixel value
   given the coordinates in the image"
   [aw ah av bw bh bv]
-  (let [distances
+  (let [b-points (black-points bw bh bv)
+        a-points (black-points aw ah av)
+        distances
         (map #(let [distances-with
                     (map point-distance
                          (repeat %)
-                         (black-points bw bh bv))]
+                         b-points)]
                 (if (empty? distances-with)
                   0
                   (reduce min distances-with)))
-             (black-points aw ah av))]
+             a-points)]
     (if (empty? distances)
-      1000 ; big value
+      100000 ; big value
       (reduce max distances))))
 
 (defn hausdorff-distance
