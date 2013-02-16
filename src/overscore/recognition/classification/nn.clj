@@ -34,7 +34,7 @@
       ;; Encog throws an exception, but the training is successfull (or is it?)
       (catch Exception e nil))))
 
-(defn classify
+(defn classify-nn
   "Classify a symbol using the trained neural network"
   [^BufferedImage img segment]
   (let [input (data :basic (resize-to-vector img segment))

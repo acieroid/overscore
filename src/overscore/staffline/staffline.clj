@@ -3,8 +3,7 @@
   (:use overscore.staffline.identification
         overscore.staffline.removal
         overscore.utils
-        clojure.java.io
-        [clojure.tools.logging :only [info]])
+        clojure.java.io)
   (:import java.awt.image.BufferedImage
            javax.imageio.ImageIO
            java.io.File))
@@ -51,12 +50,11 @@
     (loop [imgs imgs
            i 0]
       (when (not (empty? imgs))
-        (info (str  "Removing stafflines on system #" i))
+        (println "Removing stafflines on system #" i)
         (let [[nostaff pos] (remove-stafflines (first imgs))]
           (when debug
             (color-stafflines (first imgs) pos (str in "-" i)))
           (when (not (empty? pos))
             (ImageIO/write nostaff "png" (File. (get-name in i)))
-            (with-open [f (writer (str in "-" i ".txt"))]
-              (.write f (str pos)))))
+            (write-vector (str in "-" i ".txt") pos)))
         (recur (rest imgs) (inc i))))))
