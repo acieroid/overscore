@@ -10,9 +10,10 @@
 (defn usage []
   (println
    "Possible arguments:\n"
-   "\tconvert <in> <out>\n\t\tConvert symbols from Audiveris training set to png images in the <out> directory"
+   "\tconvert <in> <out>\n\t\tConvert symbols from Audiveris training set to png images in the <out> directory\n"
    "\tpreprocessing <in> <out> <out-ref>\n\t\tPreprocess the image <in>, saving the output image to <out> and the reference lengths descriptions in <out-ref>\n"
    "\tstaffline <in>\n\t\tIsolate the systems and find the staffline positions on each system, from the image <in>. Saves the output for each system to <in>-n.png and <in>-n.txt, where n is an integer\n"
+   "\tsegmentation <in-img> <in-refs> <out-segs>\n\t\tSegment the image <in-img>, with reference lengths described in <in-refs>, isolating each symbol. Save the segments descriptions in <out-segs>"
    "\tgenerate <in> <out> <name>: parse the <in> MusicXML file, and generate the song <name> in the clojure file <out>\n"
    "\tplay <file> <name>: play the song called <name> defined in the file <file>\n"))
 
