@@ -1,5 +1,5 @@
 (ns overscore.recognition.classification.classification
-  (:use overscore.tools.files
+  (:use overscore.utils
         overscore.recognition.segmentation.segment
         overscore.recognition.classification.training
         overscore.recognition.classification.knn)

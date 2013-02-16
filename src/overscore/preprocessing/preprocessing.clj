@@ -1,6 +1,6 @@
 ;;; Implement the prerprocessing step of the OMR system.
 (ns overscore.preprocessing.preprocessing
-  (:use overscore.tools.files
+  (:use overscore.utils
         overscore.preprocessing.gray
         overscore.preprocessing.otsu
         overscore.preprocessing.rle

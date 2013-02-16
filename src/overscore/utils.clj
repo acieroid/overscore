@@ -1,6 +1,8 @@
 ;;; Collection of utilities functions
 (ns overscore.utils
-  (:import java.awt.image.BufferedImage))
+  (:import java.awt.image.BufferedImage
+           java.io.PushbackReader
+           java.io.File))
 
 (defn parse-int
   "Parse an integer, possibly from a floating-point representation"
@@ -151,3 +153,16 @@
      (format "%s%s-%s%s" prefix (System/currentTimeMillis)
              (long (rand 0x100000000)) suffix)))
 
+(defn read-vector
+  "Safely read a vector from a file"
+  [file]
+  (with-open [f (PushbackReader. (reader file))]
+    (binding [*read-eval* false]
+      (read f))))
+
+(defn write-vector
+  "Write a vector to a file"
+  [file vec]
+  (with-open [f (writer file)]
+    (binding [*out* f]
+      (println vec))))
