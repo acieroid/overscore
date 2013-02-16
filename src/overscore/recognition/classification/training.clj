@@ -58,7 +58,7 @@
   the data element set as the result of calling the store function
   with the BufferedImage corresponding to the current image."
   [in & {:keys [store]
-         :or {store resize-to-vector}}]
+         :or {store to-vector}}]
   (if (empty? @training-set)
     (let [dir (File. in)]
       (doseq [subdir (.listFiles dir)]

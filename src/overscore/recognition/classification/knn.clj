@@ -6,15 +6,25 @@
         overscore.recognition.classification.hausdorff)
   (:import java.awt.image.BufferedImage))
 
+(defn k-min
+  "Return the k minimum elements (given a key function) of a vector"
+  [k key vec]
+  (loop [mins (take k vec)
+         vec (drop k vec)]
+    (if (empty? vec)
+      mins
+      (if (empty? (filter #(< (key (first vec)) (key %)) mins))
+        (recur mins (rest vec))
+        (recur (cons (first vec) (drop 1 (sort-by (fn [x] (key x)) > mins)))
+               (rest vec))))))
+
 (defn classify
   "Classify a symbol contained in a segment of an image. Returns its
   class"
   [^BufferedImage img segment & {:keys [k distance]
                                  :or {k 3
                                       distance hausdorff-distance}}]
-  (let [neighbours (take k (sort-by
-                            #(distance img segment %)
-                            @training-set))]
+  (let [neighbours (k-min k #(distance img segment %) @training-set)]
     (if (empty? neighbours)
       ;; No neighbour (should not happen if the training set is not empty)
       :empty
