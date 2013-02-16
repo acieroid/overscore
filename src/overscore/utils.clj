@@ -1,5 +1,6 @@
 ;;; Collection of utilities functions
 (ns overscore.utils
+  (:use clojure.java.io)
   (:import java.awt.image.BufferedImage
            java.io.PushbackReader
            java.io.File))
