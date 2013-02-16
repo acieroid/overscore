@@ -1,6 +1,7 @@
 ;;; Define and load the training set data
 (ns overscore.recognition.classification.training
-  (:use overscore.recognition.segmentation.segment)
+  (:use overscore.utils
+        overscore.recognition.segmentation.segment)
   (:import java.awt.image.BufferedImage
            javax.imageio.ImageIO
            java.io.File))
@@ -22,12 +23,25 @@
             res (transient [])]
        (if (< y (+ (:start-y segment) (segment-height segment)))
          (if (< x (+ (:start-x segment) (segment-width segment)))
-           (recur (inc x) (inc y)
+           (recur (inc x) y
                   (conj! res (if (== (.getRGB img x y) -1)
                                false    ; white
-                               true)))  ; black
+                               true     ; black
+                               )))
            (recur 0 (inc y) res))
          (persistent! res)))))
+
+(defn resize-to-vector
+  "Similar to to-vector, but first resize the image to 20x20 image"
+  ([^BufferedImage img]
+     (to-vector (resize-image img 20 20)))
+  ([^BufferedImage img segment]
+     (to-vector
+      (resize-image
+       (.getSubimage img
+                     (:start-x segment) (:start-y segment)
+                     (segment-width segment) (segment-height segment))
+       20 20))))
 
 (defn load-training-set-images
   "Load the training set data from a given directory. The structure of
@@ -44,7 +58,7 @@
   the data element set as the result of calling the store function
   with the BufferedImage corresponding to the current image."
   [in & {:keys [store]
-         :or {store to-vector}}]
+         :or {store resize-to-vector}}]
   (if (empty? @training-set)
     (let [dir (File. in)]
       (doseq [subdir (.listFiles dir)]
