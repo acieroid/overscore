@@ -130,6 +130,16 @@
       (.setRGB out x y (f x y (.getRGB img x y))))
     out))
 
+(defn resize-image
+  "Resize an image to a given size. Return the newly created image"
+  [^BufferedImage img width height & {:keys [type]
+                                      :or {type BufferedImage/TYPE_BYTE_BINARY}}]
+  (let [resized (BufferedImage. width height type)
+        g (.createGraphics resized)]
+    (.drawImage g img 0 0 width height nil)
+    (.dispose g)
+    resized))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Filesystem utilities ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
