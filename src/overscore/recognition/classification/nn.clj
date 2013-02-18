@@ -40,6 +40,7 @@
   "Train a neural network until the error is less than err"
   [err & {:keys [network training-set]}]
   (let [trainer (Backpropagation. network training-set)]
+    (println "starting training")
     (.iteration trainer)
     (while (> (.getError trainer) err)
       (println "training, error is " (.getError trainer))
@@ -60,12 +61,12 @@
         output (map :class @training-set)
         syms (keys (group-by (fn [x] x) output))
         dataset (dataset input
-                      (map double (range (count output))))
+                         (map (fn [x] [(double x)]) (range (count output))))
         new-labels (reduce (fn [map [sym val]] (assoc map val sym))
                            (hash-map)
                            (map (fn [x y] [x y]) syms (range)))]
     (swap! labels (fn [_] new-labels))
-    (trainer 0.05 :network net :training-set dataset)))
+    (train 0.05 :network net :training-set dataset)))
 
 (defn classify-nn
   "Classify a symbol using the trained neural network"

@@ -16,6 +16,7 @@
         segments (map (fn [[sx sy ex ey]]
                         (->segment sx sy ex ey))
                       segments-vectors)
+        _ (train-network)
         classes (map #(classify-nn img %) segments)
         output (map (fn [seg class] [(:start-x seg)
                                      (:start-y seg)
