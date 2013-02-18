@@ -3,7 +3,8 @@
 (ns overscore.recognition.classification.knn
   (:use overscore.recognition.segmentation.segment
         overscore.recognition.classification.training
-        overscore.recognition.classification.hausdorff)
+        overscore.recognition.classification.hausdorff
+        overscore.recognition.classification.euclidian)
   (:import java.awt.image.BufferedImage))
 
 (defn k-min
@@ -18,12 +19,12 @@
         (recur (cons (first vec) (drop 1 (sort-by (fn [x] (key x)) > mins)))
                (rest vec))))))
 
-(defn classify
+(defn classify-knn
   "Classify a symbol contained in a segment of an image. Returns its
   class"
   [^BufferedImage img segment & {:keys [k distance]
                                  :or {k 3
-                                      distance hausdorff-distance}}]
+                                      distance euclidian-distance}}]
   (let [neighbours (k-min k #(distance img segment %) @training-set)]
     (if (empty? neighbours)
       ;; No neighbour (should not happen if the training set is not empty)

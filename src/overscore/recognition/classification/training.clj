@@ -12,7 +12,7 @@
 
 (defn to-vector
   "Convert a BufferedImage to a one-dimension boolean vector, where
-  the true values correspond to activated pixels (thus, black
+  the 1 values correspond to activated pixels (thus, black
   pixels). If a segment is given, only return the data corresponding
   to that segment"
   ([^BufferedImage img]
@@ -25,8 +25,8 @@
          (if (< x (+ (:start-x segment) (segment-width segment)))
            (recur (inc x) y
                   (conj! res (if (== (.getRGB img x y) -1)
-                               false    ; white
-                               true     ; black
+                               0 ; white (not active)
+                               1 ; black (active)
                                )))
            (recur 0 (inc y) res))
          (persistent! res)))))
@@ -58,7 +58,7 @@
   the data element set as the result of calling the store function
   with the BufferedImage corresponding to the current image."
   [in & {:keys [store]
-         :or {store to-vector}}]
+         :or {store resize-to-vector}}]
   (if (empty? @training-set)
     (let [dir (File. in)]
       (doseq [subdir (.listFiles dir)]

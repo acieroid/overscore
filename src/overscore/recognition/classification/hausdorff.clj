@@ -24,7 +24,7 @@
     (if (and (not (empty? v)) (< y h))
       (if (< x w)
         (recur (inc x) (inc y) (rest v)
-               (if (first v)
+               (if (== (first v) 1)
                  (conj! res (->point x y))
                  res))
         (recur 0 (inc y) v res))

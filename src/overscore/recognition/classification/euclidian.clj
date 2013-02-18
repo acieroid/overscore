@@ -9,5 +9,5 @@
   every element in the training set has a size of 20x20"
   [^BufferedImage image segment template]
   (let [data (resize-to-vector image segment)]
-    (reduce + (map #(let [d (- (if %1 1 0) (if %2 1 0))] (* d d))
+    (reduce + (map #(let [d (- %1 %2)] (* d d))
                    data (:data template)))))
