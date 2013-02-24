@@ -2,6 +2,7 @@
 (ns overscore.utils
   (:use clojure.java.io)
   (:import java.awt.image.BufferedImage
+           javax.imageio.ImageIO
            java.io.PushbackReader
            java.io.File))
 
@@ -142,6 +143,27 @@
     (.drawImage g img 0 0 width height nil)
     (.dispose g)
     resized))
+
+(defn draw-vector
+  "Draw a vector that represents a black & white image"
+  [vec w h dest]
+  (let [img (BufferedImage. w h BufferedImage/TYPE_BYTE_BINARY)]
+    (loop [vec vec
+           x 0
+           y 0]
+      (if (< y h)
+        (if (< x w)
+          (do
+            (if (or
+                 ;; Depending on where this function is called, the
+                 ;; vector might contain booleans or doubles
+                 (true? (first vec))
+                 (and (number? (first vec)) (> 0.1 (first vec))))
+              (.setRGB img x y -1)
+              (.setRGB img x y 0))
+            (recur (rest vec) (inc x) y))
+          (recur vec 0 (inc y)))
+        (ImageIO/write img "png" (File. dest))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Filesystem utilities ;;;
