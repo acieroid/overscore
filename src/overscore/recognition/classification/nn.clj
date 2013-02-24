@@ -38,13 +38,16 @@
 
 (defn train
   "Train a neural network until the error is less than err"
-  [err & {:keys [network training-set]}]
+  [err min-iterations & {:keys [network training-set]}]
   (let [trainer (Backpropagation. network training-set)]
     (println "starting training, until error is" err)
     (.iteration trainer)
-    (while (> (.getError trainer) err)
-      (println "training, error is" (.getError trainer))
-      (.iteration trainer))
+    (loop [i 0]
+      (when (or (< i min-iterations)
+                (> (.getError trainer) err))
+        (println (str "training iteration " i ", error is: " (.getError trainer)))
+        (.iteration trainer)
+        (recur (inc i))))
     (println "done training, final error:" (.getError trainer))))
 
 (def net (atom nil))
