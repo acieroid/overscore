@@ -16,45 +16,8 @@
            org.encog.persist.EncogDirectoryPersistence
            java.io.File))
 
-(defn network
-  "Create a neural network"
-  [& {:keys [input output hidden]}]
-  (let [net (BasicNetwork.)]
-    (.addLayer net (BasicLayer. (ActivationSigmoid.) true input))
-    (doseq [n hidden]
-      (.addLayer net (BasicLayer. (ActivationSigmoid.) true n)))
-    (.addLayer net (BasicLayer. (ActivationSigmoid.) true output))
-    (.finalizeStructure (.getStructure net))
-    (.reset net)
-    net))
-
-(defn dataset
-  "Create a dataset"
-  [data ideal]
-  (BasicNeuralDataSet.
-   (into-array (map double-array data))
-   (into-array (map double-array ideal))))
-
-(defn data
-  "Create a basic data"
-  [value]
-  (BasicNeuralData. (double-array value)))
-
-(defn train
-  "Train a neural network until the error is less than err"
-  [err min-iterations & {:keys [network training-set]}]
-  (let [trainer (Backpropagation. network training-set)]
-    (println "starting training, until error is" err)
-    (.iteration trainer)
-    (loop [i 0]
-      (when (or (< i min-iterations)
-                (> (.getError trainer) err))
-        (println (str "training iteration " i ", error is: " (.getError trainer)))
-        (.iteration trainer)
-        (recur (inc i))))
-    (println "done training, final error:" (.getError trainer))))
-
 (def net (atom nil))
+(def trainer (atom nil))
 (def labels (atom []))
 
 (defn class-to-vector
@@ -85,53 +48,102 @@
         (recur (rest vector) (inc i) i (first vector))
         (recur (rest vector) (inc i) max-i max)))))
 
+(defn network
+  "Create a neural network"
+  [& {:keys [input output hidden]}]
+  (let [net (BasicNetwork.)]
+    (.addLayer net (BasicLayer. (ActivationSigmoid.) true input))
+    (doseq [n hidden]
+      (.addLayer net (BasicLayer. (ActivationSigmoid.) true n)))
+    (.addLayer net (BasicLayer. (ActivationSigmoid.) true output))
+    (.finalizeStructure (.getStructure net))
+    (.reset net)
+    net))
+
+(defn dataset
+  "Create a dataset"
+  [data ideal]
+  (BasicNeuralDataSet.
+   (into-array (map double-array data))
+   (into-array (map double-array ideal))))
+
+(defn data
+  "Create a basic data"
+  [value]
+  (BasicNeuralData. (double-array value)))
+
+(defn get-trainer
+  "Return the trainer for a neural network"
+  [& {:keys [network training-set]}]
+  (let [input (map :data training-set)
+        output (map :class training-set)
+        dataset (dataset input
+                         (map class-to-vector output))]
+    (Backpropagation. network
+                      dataset)))
+
+(defn train
+  "Train a trainer for a given number of iterations"
+  [trainer iterations]
+  (loop [i 0]
+    (when (< i iterations)
+      (println (str "training iteration " i ", error is: " (.getError trainer)))
+      (.iteration trainer)
+      (recur (inc i)))))
+
 (defn create-labels
   "Create the labels needed by the neural network"
   [training-set]
   (let [syms (keys (group-by (fn [x] x) (map :class training-set)))]
     (swap! labels (fn [_] syms))))
 
+(defn create-network
+  "Create the neural network and its trainer, for a given training set"
+  [training-set]
+  (when (== (count @labels) 0)
+    (println "No labels. Did you call create-labels?"))
+  (swap! net (fn [_] (network :input 400
+                              :output (count @labels)
+                              :hidden [400])))
+  (swap! trainer (fn [_] (get-trainer :network @net
+                                      :training-set training-set))))
+
 (defn train-network
   "Train the neural network with the given data"
-  [iterations training-set]
-  (let [input (map :data training-set)
-        output (map :class training-set)
-        dataset (dataset input
-                         (map class-to-vector output))]
-    (if (nil? @net)
-      (when (== (count @labels) 0)
-        (println "No labels. Did you call create-labels?"))
-      (swap! net (fn [_] (network :input 400
-                                  :output (count @labels)
-                                  :hidden [400]))))
-    (train 1 ; don't care about the error here
-           iterations :network @net :training-set dataset)))
+  [iterations]
+  (train @trainer iterations))
 
 (defn plot-error
   "Train the network, 'step' iteration at a time, with the training
   set. After each batch of 'step' iterations, compute the error on the
   validation set. Finally, return the result that can then be
   plotted."
-  [from to step training-set validation-set]
-  (loop [data []
-         i from]
-    (if (> i to)
-      data
-      (do
-        (train-network 0.01 step training-set)
-        (recur (cons (.calculateError @net validation-set)
-                     data)
-               (+ i step))))))
+  [iterations step training-set validation-set]
+  (let [validation-input (map :data validation-set)
+        validation-output (map :class validation-set)
+        validation-dataset (dataset validation-input
+                                    (map class-to-vector validation-output))]
+    (loop [data []
+           i 0]
+      (if (> i iterations)
+        (reverse data)
+        (do
+          (train-network step)
+          (let [err (.calculateError @net validation-dataset)]
+            (println "trained for" step "steps, error is" err)
+            (recur (cons err data)
+                   (+ i step))))))))
 
 (defn save-network
   "Save the neural network to a destination directory"
-  [network dest]
-  (EncogDirectoryPersistence/saveObject (File. dest) network))
+  [dest]
+  (EncogDirectoryPersistence/saveObject (File. dest) @net))
 
 (defn load-network
   "Load a network saved with save-network"
   [src]
-  (EncogDirectoryPersistence/loadObject (File. src)))
+  (swap! net
+         (fn [_] (EncogDirectoryPersistence/loadObject (File. src)))))
 
 (defn classify-nn
   "Classify a symbol using the trained neural network"
