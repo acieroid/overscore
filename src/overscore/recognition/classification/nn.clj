@@ -85,18 +85,26 @@
         (recur (rest vector) (inc i) i (first vector))
         (recur (rest vector) (inc i) max-i max)))))
 
+(defn create-labels
+  "Create the labels needed by the neural network"
+  [training-set]
+  (let [syms (keys (group-by (fn [x] x) (map :class training-set)))]
+    (swap! labels (fn [_] syms))))
+
 (defn train-network
-  "Train the neural network with the training set data"
-  [err iterations]
-  (if (nil? @net)
-    (let [input (map :data @training-set)
-          output (map :class @training-set)
-          syms (keys (group-by (fn [x] x) output))
-          _ (swap! labels (fn [_] syms))
-          dataset (dataset input
-                           (map class-to-vector output))]
-      (swap! net (fn [_] (network :input 400 :output (count syms) :hidden [400])))
-      (train 0.01 200 :network @net :training-set dataset))))
+  "Train the neural network with the given data"
+  [err iterations training-set]
+  (let [input (map :data training-set)
+        output (map :class training-set)
+        dataset (dataset input
+                         (map class-to-vector output))]
+    (if (nil? @net)
+      (when (== (count @labels) 0)
+        (println "No labels. Did you call create-labels?"))
+      (swap! net (fn [_] (network :input 400
+                                  :output (count @labels)
+                                  :hidden [400]))))
+    (train err iterations :network @net :training-set dataset)))
 
 (defn save-network
   "Save the neural network to a destination directory"
