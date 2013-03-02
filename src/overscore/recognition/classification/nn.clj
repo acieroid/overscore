@@ -2,6 +2,7 @@
 (ns overscore.recognition.classification.nn
   (:use overscore.recognition.segmentation.segment
         overscore.recognition.classification.training
+        overscore.utils
         clojure.math.numeric-tower)
   (:import java.awt.image.BufferedImage
            org.encog.neural.networks.BasicNetwork
@@ -10,7 +11,10 @@
            org.encog.neural.networks.training.propagation.back.Backpropagation
            org.encog.neural.data.basic.BasicNeuralDataSet
            org.encog.neural.data.basic.BasicNeuralData
-           org.encog.engine.network.activation.ActivationSigmoid))
+           org.encog.engine.network.activation.ActivationSigmoid
+           org.encog.util.file.FileUtil
+           org.encog.persist.EncogDirectoryPersistence
+           java.io.File))
 
 (defn network
   "Create a neural network"
@@ -83,20 +87,32 @@
 
 (defn train-network
   "Train the neural network with the training set data"
-  []
-  (let [input (map :data @training-set)
-        output (map :class @training-set)
-        syms (keys (group-by (fn [x] x) output))
-        _ (swap! labels (fn [_] syms))
-        dataset (dataset input
-                         (map class-to-vector output))]
-    (swap! net (fn [_] (network :input 400 :output (count syms) :hidden [400])))
-    (train 0.05 :network @net :training-set dataset)))
+  [err iterations]
+  (if (nil? @net)
+    (let [input (map :data @training-set)
+          output (map :class @training-set)
+          syms (keys (group-by (fn [x] x) output))
+          _ (swap! labels (fn [_] syms))
+          dataset (dataset input
+                           (map class-to-vector output))]
+      (swap! net (fn [_] (network :input 400 :output (count syms) :hidden [400])))
+      (train 0.01 200 :network @net :training-set dataset))))
+
+(defn save-network
+  "Save the neural network to a destination directory"
+  [network dest]
+  (EncogDirectoryPersistence/saveObject (File. dest) network))
+
+(defn load-network
+  "Load a network saved with save-network"
+  [src]
+  (EncogDirectoryPersistence/loadObject (File. src)))
 
 (defn classify-nn
   "Classify a symbol using the trained neural network"
   [^BufferedImage img segment]
-  (let [input (data (resize-to-vector img segment))
+  (let [_ (draw-vector (resize-to-vector img segment) 20 20 (str (temp-name "/tmp/foo") ".png"))
+        input (data (resize-to-vector img segment))
         vector (into [] (.getData (.compute @net input)))
         class (vector-to-class vector)]
     class))
