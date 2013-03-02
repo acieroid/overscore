@@ -20,7 +20,7 @@
            data shuffled
            props props]
       (if (or (empty? shuffled) (empty? props))
-        res
+        (reverse res)
         (let [n (* (first props) size)]
           (recur (cons (take n data) res)
                  (drop n data)
