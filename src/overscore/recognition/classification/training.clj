@@ -10,6 +10,22 @@
 
 (def training-set (atom []))
 
+(defn split-training-set
+  "Randomly split the given training set according to the proportions
+  given"
+  [props]
+  (let [shuffled (shuffle @training-set)
+        size (count shuffled)]
+    (loop [res []
+           data shuffled
+           props props]
+      (if (or (empty? shuffled) (empty? props))
+        res
+        (let [n (* (first props) size)]
+          (recur (cons (take n data) res)
+                 (drop n data)
+                 (rest props)))))))
+
 (defn to-vector
   "Convert a BufferedImage to a one-dimension boolean vector, where
   the 1 values correspond to activated pixels (thus, black
