@@ -93,7 +93,7 @@
 
 (defn train-network
   "Train the neural network with the given data"
-  [err iterations training-set]
+  [iterations training-set]
   (let [input (map :data training-set)
         output (map :class training-set)
         dataset (dataset input
@@ -104,7 +104,24 @@
       (swap! net (fn [_] (network :input 400
                                   :output (count @labels)
                                   :hidden [400]))))
-    (train err iterations :network @net :training-set dataset)))
+    (train 1 ; don't care about the error here
+           iterations :network @net :training-set dataset)))
+
+(defn plot-error
+  "Train the network, 'step' iteration at a time, with the training
+  set. After each batch of 'step' iterations, compute the error on the
+  validation set. Finally, return the result that can then be
+  plotted."
+  [from to step training-set validation-set]
+  (loop [data []
+         i from]
+    (if (> i to)
+      data
+      (do
+        (train-network 0.01 step training-set)
+        (recur (cons (.calculateError @net validation-set)
+                     data)
+               (+ i step))))))
 
 (defn save-network
   "Save the neural network to a destination directory"
