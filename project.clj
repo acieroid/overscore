@@ -7,9 +7,9 @@
                  [org.clojure/tools.logging "0.2.3"]
                  [org.clojure/math.numeric-tower "0.0.2"]
                  [overtone "0.7.1"]
-                 ;[incanter "1.5.0-SNAPSHOT"]
+                 [incanter "1.5.0-SNAPSHOT"]
                  [org.encog/encog-core "3.1.0"]]
-  ;:source-paths ["opencv-2.4.9.jar"]
-  ;:jvm-opts ["-Djava.library.path=/usr/local/lib"]
+  :source-paths ["opencv-2.4.9.jar" "." "src"]
+  :jvm-opts ["-Djava.library.path=/usr/local/lib"]
   :offline? true
   :main overscore.main)
