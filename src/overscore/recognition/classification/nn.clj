@@ -35,7 +35,7 @@
 (defn vector-to-class
   "Convert a vector returned by the neural network to a class"
   [vector & {:keys [threshold]
-             :or {threshold 0.5}}]
+             :or {threshold 0.2}}]
   (loop [vector vector
          i 0
          max-i -1
@@ -87,7 +87,6 @@
   [trainer iterations]
   (loop [i 0]
     (when (< i iterations)
-      (println (str "training iteration " i ", error is: " (.getError trainer)))
       (.iteration trainer)
       (recur (inc i)))))
 
@@ -130,9 +129,17 @@
         (do
           (train-network step)
           (let [err (.calculateError @net validation-dataset)]
-            (println "trained for" step "steps, error is" err)
+            (println (str "[" i "/" iterations "] trained for " step " steps, error is " err))
             (recur (cons err data)
                    (+ i step))))))))
+
+(defn get-test-error
+  [test-set]
+  (let [input (map :data test-set)
+        output (map :class test-set)
+        dataset (dataset input
+                         (map class-to-vector output))]
+    (.calculateError @net dataset)))
 
 (defn save-network
   "Save the neural network to a destination directory"
