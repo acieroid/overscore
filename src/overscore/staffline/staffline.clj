@@ -9,6 +9,7 @@
            java.io.File))
 
 (defn color-stafflines
+  "Color the stafflines pixels in red in a new image, used for debug."
   [^BufferedImage img positions name]
   (let [out (copy-image img
                         (fn [x y bw]
@@ -17,7 +18,7 @@
                             0xFFFFFF
                             0x0))
                         :type BufferedImage/TYPE_INT_RGB)]
-    ;; Color the staffline pixels in red
+    ;; Color the staffline pixels
     ;; TODO: do it for staffline-height pixels of height
     (doseq [y positions
             x (range (.getWidth out))]
@@ -41,11 +42,8 @@
             containing the positions
        2.2. Remove the stafflines, producing a new image if stafflines were found
    If the input is img.png, the outputs are img-n.png and img-n.txt
-   where n is an integer.
-
-  When debug is set to true, will also save debug images in
-  img-n-debug.png where the stafflines found will be highlighted"
-  [in debug]
+   where n is an integer."
+  [in]
   (let [img (ImageIO/read (File. in))
         imgs (isolate-systems img)]
     (loop [imgs imgs
@@ -53,8 +51,7 @@
       (when (not (empty? imgs))
         (println "Removing stafflines on system #" i)
         (let [[nostaff pos] (remove-stafflines (first imgs))]
-          (when debug
-            (color-stafflines (first imgs) pos (str in "-" i)))
+          (color-stafflines (first imgs) pos (str in "-" i))
           (when (not (empty? pos))
             (ImageIO/write nostaff "png" (File. (get-name in i "png")))
             (write-vector (get-name in i "txt") pos)))
