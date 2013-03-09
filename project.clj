@@ -9,7 +9,5 @@
                  [overtone "0.7.1"]
                  [incanter "1.5.0-SNAPSHOT"]
                  [org.encog/encog-core "3.1.0"]]
-  :source-paths ["opencv-2.4.9.jar" "." "src"]
-  :jvm-opts ["-Djava.library.path=/usr/local/lib"]
   :offline? true
   :main overscore.main)

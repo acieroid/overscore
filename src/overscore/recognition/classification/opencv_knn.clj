@@ -1,14 +1,18 @@
 ;;; Classify symbols using OpenCV's kNN
 (ns overscore.recognition.classification.opencv-knn
   (:use overscore.recognition.segmentation.segment
-        overscore.recognition.classification.training)
+        overscore.recognition.classification.training
+        clojure.java.io)
   (:import java.awt.image.BufferedImage
-           org.opencv.core.CvType
-           org.opencv.core.Mat
-           org.opencv.ml.CvKNearest))
+           java.io.OutputStreamWriter
+           java.io.InputStreamReader
+           java.io.PushbackReader
+           java.io.File))
 
 (def labels (atom []))
-(def knn-obj (atom nil))
+(def process (atom nil))
+(def out-stream (atom nil))
+(def in-stream (atom nil))
 
 (defn create-labels
   "Create the labels needed by the neural network"
@@ -27,34 +31,40 @@
   (nth @labels n))
 
 (defn create-knn
-  "Convert the training set to OpenCV matrices and return the kNN
-    object used to do classification"
-  []
-  (try
-    ;; Load the lib if not already loaded
-    ;; TODO: there's still some UnsatisfiedLinkError when trying to create a Mat
-    (System/loadLibrary "opencv_java")
-    (catch UnsatisfiedLinkError e))
-  (let [training-vectors (Mat. (count @training-set) 400 CvType/CV_32FC1)
-        training-labels (Mat. (count @training-set) 1 CvType/CV_32FC1)]
-    (loop [training-set @training-set
-           i 0]
-      (when (not (empty? training-set))
-        (let [vec (:data (first training-set))
-              class (:class (first training-set))]
-          (.put training-vectors i 0 (int-array vec))
-          (.put training-labels i 0 (class-to-number class))
-          (recur (rest training-set) (inc i)))))
-    (swap! knn-obj (fn [_] (.CvKNearest training-vectors training-labels)))))
+  "Create the OpenCV classifier subprocess"
+  [& {:keys [k]
+      :or {k 3}}]
+  (if (empty? @training-set)
+    (println "Training set is empty, not creating OpenCV subprocess")
+    (let [p (.exec (Runtime/getRuntime) "./src/overscore/recognition/classification/opencv_knn")
+          stdin (PushbackReader. (InputStreamReader. (.getInputStream p)))
+          stdout (OutputStreamWriter. (.getOutputStream p))]
+      (create-labels @training-set)
+      (swap! process (fn [_] p))
+      (swap! out-stream (fn [_] stdout))
+      (swap! in-stream (fn [_] stdin))
+      ;; Write the training set
+      (.write stdout (str k " "))
+      (.write stdout (str (count @training-set) " "))
+      (.write stdout "400")
+      (.write stdout "\n")
+      (doseq [elem @training-set]
+        (.write stdout (str (class-to-number (:class elem))))
+        (.write stdout "\n")
+        (doseq [bit (:data elem)]
+          (.write stdout (str bit " ")))
+        (.write stdout "\n"))
+      (.flush stdout))))
 
 (defn classify-opencv-knn
   "Classify a symbol using OpenCV's kNN"
-  [^BufferedImage img segment & {:keys [k]
-                                 :or {k 3}}]
-  (let [vec (resize-to-vector img segment)
-        input (.Mat 1 400 CvType/CV_32FC1)
-        _ (.put input 0 0 (int-array vec))
-        output (.Mapt 1 1 CvType/CV_32FC1)
-        vect (.find_nearest @knn-obj input k output)]
-    output                              ; TODO
-    ))
+  [^BufferedImage img segment]
+  (let [vec (resize-to-vector img segment)]
+    ;; Write the data to OpenCV's process input stream
+    (doseq [bit vec]
+      (.write @out-stream (str bit " ")))
+    (.write @out-stream "\n")
+    (.flush @out-stream)
+    ;; Read the response
+    (let [response (read @in-stream)]
+      (number-to-class response))))

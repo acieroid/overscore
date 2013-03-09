@@ -40,14 +40,21 @@ int main(int argc, char *argv[])
   while (!std::cin.eof()) {
     /* read the given vector */
     for (int j = 0; j < size; j++) {
+      if (std::cin.eof()) {
+        goto end;
+      }
       std::cin >> vec->data.fl[j];
     }
 
     /* classify */
     knn.find_nearest(vec, k, label);
 
-    std::cout << label->data.fl[0];
+    std::cout << label->data.fl[0] << std::endl;
   }
+
+ end:
   cvReleaseMat(&vec);
   cvReleaseMat(&label);
+
+  return 0;
 }

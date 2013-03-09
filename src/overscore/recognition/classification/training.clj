@@ -77,6 +77,7 @@
          :or {store resize-to-vector}}]
   (if (empty? @training-set)
     (let [dir (File. in)]
+      (println "Loading training set")
       (doseq [subdir (.listFiles dir)]
         (when (.isDirectory subdir)
           (doseq [file (.listFiles subdir)]
@@ -88,5 +89,6 @@
                           (.getWidth img)
                           (.getHeight img)
                           (store img))]
-                (swap! training-set #(cons data %))))))))
+                (swap! training-set #(cons data %)))))))
+      (println "Training set loaded"))
     (println "Training set already loaded")))
