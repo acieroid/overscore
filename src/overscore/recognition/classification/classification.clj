@@ -4,7 +4,25 @@
         overscore.recognition.classification.training
         overscore.recognition.classification.opencv-knn)
   (:import javax.imageio.ImageIO
+           java.awt.Color
+           java.awt.image.BufferedImage
            java.io.File))
+
+(defn draw-classes
+  "Annotate an image with the class of each segment"
+  [^BufferedImage img classes]
+  (let [colored-img (copy-image img
+                                (fn [x y bw] 
+                                  (if (= bw -1) 
+                                    0xFFFFFF
+                                    0x0))
+                                :type BufferedImage/TYPE_INT_RGB)
+        g (.createGraphics colored-img)]
+    (.setColor g Color/RED)
+    (doseq [[start-x start-y end-x end-y class] classes]
+      (.drawString g (str class)
+                   start-x end-y))
+    (ImageIO/write colored-img "png" (File. "/tmp/debug-classification.png"))))
 
 (defn classification
   "Classify all the symbols found by the segmentation process in an
@@ -24,4 +42,5 @@
                                      (:end-y seg)
                                      class])
                     segments classes)]
+    (draw-classes img output)
     (write-vector out output)))
