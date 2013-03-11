@@ -6,10 +6,10 @@ and plays them using [[http://overtone.github.com/][Overtone]]. Overscore consis
   - a MusicXML parser that compiles MusicXML files into Clojure files
   - multiple helper macros and functions built over Overtone to have a
     system more adapted to encode classical music
-* How it works
-** OMR
+* TODO How it works
+** TODO OMR
 The initial plan for the OMR part is documented in
-=doc/design/design.org=. In this section we will briefly describe how
+[[doc/design/design.org]]. In this section we will briefly describe how
 it is currently implemented and discuss some results.
 *** Part 1: Image Preprocessing
 **** Binarization
@@ -20,9 +20,9 @@ necessary.
 
 It is done in two steps:
   1. If the image is in color, convert it into grayscale using the
-     [[http://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale][luma component]], implemented in [[overscore/tree/master/src/overscore/preprocessing/gray.clj][preprocessing/gray.clj]].
+     [[http://en.wikipedia.org/wiki/Grayscale#Converting_color_to_grayscale][luma component]], implemented in [[src/overscore/preprocessing/gray.clj][preprocessing/gray.clj]].
   2. Convert the grayscale image into binary using
-     [[http://en.wikipedia.org/wiki/Otsu%27s_method][Otsu's method]], implemented in [[overscore/tree/master/src/overscore/preprocessing/otsu.clj][preprocessing/otsu.clj]].
+     [[http://en.wikipedia.org/wiki/Otsu%27s_method][Otsu's method]], implemented in [[src/overscore/preprocessing/otsu.clj][preprocessing/otsu.clj]].
 **** Reference lengths
 Once the image is binarized, the reference lengths (staff line and
 staff space height) are found by analyzing the most common vertical
@@ -60,7 +60,7 @@ Once each system is found, they are each saved in an image.
 # (save chart "foo.png" :width 2745 :height 3611)
 # then assembled with the png of the sheet
 
-This step is implemented in [[overscore/tree/master/src/overscore/staffline/identification.clj][staffline/identification.clj]].
+This step is implemented in [[src/overscore/staffline/identification.clj][staffline/identification.clj]].
 **** Staff line identification and removal
 The staff line removal is done by using [[http://gamera.informatik.hsnr.de/index.html][Gamera]]'s [[http://music-staves.sf.net/][music-staves]]
 plugin. A python script is simply called with the input image, and
@@ -71,8 +71,8 @@ If no staff line were found in an image, it can be discarded since it
 is most likely not a relevant image (eg. some text, like the title of
 the partition).
 
-This step is implemented in [[overscore/tree/master/src/overscore/staffline/removal.clj][staffline/removal.clj]] and calls the script
-[[overscore/tree/master/src/overscore/staffline/removal.py][staffline/removal.py]].
+This step is implemented in [[src/overscore/staffline/removal.clj][staffline/removal.clj]] and calls the script
+[[src/overscore/staffline/removal.py][staffline/removal.py]].
 **** Improvements
 If the staff line removal does not work as expected because the image
 is skewed, a skew correction algorithm should be implemented in the
@@ -81,7 +81,7 @@ is skewed, a skew correction algorithm should be implemented in the
 **** Symbol Segmentation
 The segmentation is done in a similar way as done in [[OpenOMR][OpenOMR]]. All the
 sub parts of the segmentation process are assembled in
-[[overscore/tree/master/src/recognition/segmentation/segmentation.clj][recognition/segmentation/segmentation.clj]], and takes as input a path
+[[src/recognition/segmentation/segmentation.clj][recognition/segmentation/segmentation.clj]], and takes as input a path
 to an image (output by the preprocessing step), a path to a text files
 containing the reference lengths (also part of the output of the
 preprocessing step). It outputs all the segments represented as a
@@ -94,7 +94,7 @@ contains black pixels. The results are refined by:
   2. Not taking small segments, which are probably due to noise in the
      scanned image.
 
-The level-0 segmentation is implemented in [[overscore/tree/master/src/overscore/recognition/segmentation/level0.clj][recognition/segmentation/level0.clj]]. An
+The level-0 segmentation is implemented in [[src/overscore/recognition/segmentation/level0.clj][recognition/segmentation/level0.clj]]. An
 example of level-0 segmentation result can be found in
 [[overscore/tree/master/doc/level0-segments.png][doc/level0-segments.png]].
 ***** Note Head Detection
@@ -115,13 +115,13 @@ Segments having note heads in it are further decomposed into multiple
 level-1 segments. The others can directly be used as level-1 segments
 without further decomposition.
 
-The note head detection is implemented in [[overscore/tree/master/src/overscore/recognition/segmentation/notehead.clj][recognition/segmentation/notehead.clj]].
+The note head detection is implemented in [[src/overscore/recognition/segmentation/notehead.clj][recognition/segmentation/notehead.clj]].
 ***** Level-1 Segmentation
 Level-1 segmentation use the data computed by the note head detection:
 for each note head found, it creates a level-1 segment. The space
 between the note heads is also saved in a level-1 segment.
 
-Level-1 segmentation is implemented in [[overscore/tree/master/src/overscore/recognition/segmentation/level1.clj][recognition/segmentation/level1.clj]] and an
+Level-1 segmentation is implemented in [[src/overscore/recognition/segmentation/level1.clj][recognition/segmentation/level1.clj]] and an
 example output on level-0 segments that contains notes can be found in
 [[overscore/tree/master/doc/level1-segments.png][doc/level1-segments.png]].
 ***** Level-2 Segmentation
@@ -130,7 +130,7 @@ level-1 segment vertically. The resulting segments should then
 correspond to the musical features (eg. a note head, a sharp, ...) and
 can then be classified.
 
-Level-2 segmentation is implemented in [[overscore/tree/master/src/recognition/segmentation/level2.clj][recognition/segmentation/level2.clj]].
+Level-2 segmentation is implemented in [[src/recognition/segmentation/level2.clj][recognition/segmentation/level2.clj]].
 **** Symbol recognition
 Multiple symbol recognition methods are implemented. The one used by
 default uses the [[https://en.wikipedia.org/wiki/K-nearest_neighbor_algorithm][k nearest neighbors algorithm]] provided by [[http://opencv.org/][OpenCV]],
@@ -139,17 +139,17 @@ using [[http://audiveris.kenai.com/][Audiveris]]' training set.
 Since Audiveris store its training set as xml files describing
 vertical runs for each image, we need to convert it to "normal" (2-bit
 PNG) images (for easier manipulation). This is done in
-[[overscore/tree/master/src/overscore/tools/audiveris.clj][tools/audiveris.clj]].
+[[src/overscore/tools/audiveris.clj][tools/audiveris.clj]].
 
 The training set is then loaded in
-[[overscore/tree/master/src/recognition/classification/training.clj][recognition/classification/training.clj]], each image being resized to a
+[[src/recognition/classification/training.clj][recognition/classification/training.clj]], each image being resized to a
 20x20 image and represented by a vector of 400 integer (1 meaning the
 pixel is on (ie. black), 0 meaning it is off).
 
 OpenCV's k nearest neighbor method is called directly from a C++
-program, [[overscore/tree/master/src/recognition/classification/opencv_knn.cpp][recognition/classification/opencv_knn.cpp]], and the resulting
+program, [[src/recognition/classification/opencv_knn.cpp][recognition/classification/opencv_knn.cpp]], and the resulting
 program is called from clojure in
-[[overscore/tree/master/src/recognition/classification/opencv_knn.clj][recognition/classification/opencv_knn.clj]]. Once OpenCV is installed,
+[[src/recognition/classification/opencv_knn.clj][recognition/classification/opencv_knn.clj]]. Once OpenCV is installed,
 the C++ program can be compiled with:
 
 #+BEGIN_SRC shell
@@ -157,19 +157,19 @@ $ g++ opencv_knn.cpp -o opencv_knn `pkg-config opencv --libs --cflags`
 #+END_SRC
 
 Another simple classifier using kNN (implemented by hand) is
-implemented in [[overscore/tree/master/src/recognition/classification/knn.clj][recognition/classification/knn.clj]], and can use the
+implemented in [[src/recognition/classification/knn.clj][recognition/classification/knn.clj]], and can use the
 [[http://en.wikipedia.org/wiki/Hausdorff_distance][Hausdorff distance]] or the [[https://en.wikipedia.org/wiki/Euclidean_distance][Euclidian distance]]to compute the distance
 between two images. The Hausdorff distance is implemented in
-[[overscore/tree/master/src/recognition/classification/hausdorff.clj][recognition/classification/hausdorff.clj]], and the Euclidian distance
-in [[overscore/tree/master/src/recognition/classification/euclidian.clj][recognition/classification/euclidian.clj]]. However, this
+[[src/recognition/classification/hausdorff.clj][recognition/classification/hausdorff.clj]], and the Euclidian distance
+in [[src/recognition/classification/euclidian.clj][recognition/classification/euclidian.clj]]. However, this
 implementation of the kNN algorithm is *really* slow, and that is the
 reason why OpenCV's kNN is used by default.
 
 A neural network classifier using [[http://www.heatonresearch.com/][Encog]] is also implemented, in
-[[overscore/tree/master/src/recognition/classification/nn.clj][recognition/classification/nn.clj]].
+[[src/recognition/classification/nn.clj][recognition/classification/nn.clj]].
 
 All the parts of the classification step are assembled in
-[[overscore/tree/master/src/recognition/classification/classification.clj][recognition/classification/classification.clj]], and takes as input the
+[[src/recognition/classification/classification.clj][recognition/classification/classification.clj]], and takes as input the
 image (output by the preprocessing step) and a file describing the
 segments (output by the segmentation step), and outputs a file
 describing the class of each segment (as a vector of 5-element
@@ -250,7 +250,11 @@ LL(1) grammar:
          flag_2
          flag_2_up
 #+END_SRC
-* Musical Notation
+** MusicXML parser
+A simple MusicXML parser is implemented in [[src/musicxml.clj][musicxml.clj]], and converts
+MusicXML files to the notation described in the next section,
+according to the rules given in [[doc/conversion/conversion.org]].
+** TODO Musical Notation
 * Bibliography
 The papers cited in this documentation are given in this section. For
 more papers about the topic of OMR, see =doc/design/design.pdf=.
