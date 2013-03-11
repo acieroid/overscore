@@ -42,9 +42,12 @@ it if needed.
 
 ** Notes
 
-A note will be noted as follow (for a quarter-note 440-Hz A (4th octave))[fn::
-The note pitch is noted as the symbol made of the concatenation of the note
-itself, in conventional english notation, and the octave.  ]:
+A note will be noted as follow (for a quarter-note 440-Hz A (4th
+octave))[fn:pitch]:
+
+[fn:pitch] The note pitch is noted as the symbol made of the
+concatenation of the note itself, in conventional english notation,
+and the octave.
 
 #+BEGIN_SRC clojure
 (play :A4 1)

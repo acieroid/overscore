@@ -9,7 +9,7 @@ and plays them using [[http://overtone.github.com/][Overtone]]. Overscore consis
 * TODO How it works
 ** TODO OMR
 The initial plan for the OMR part is documented in
-[[doc/design/design.org]]. In this section we will briefly describe how
+[[doc/design/design.pdf]]. In this section we will briefly describe how
 it is currently implemented and discuss some results.
 *** Part 1: Image Preprocessing
 **** Binarization
@@ -253,7 +253,7 @@ LL(1) grammar:
 ** MusicXML parser
 A simple MusicXML parser is implemented in [[src/musicxml.clj][musicxml.clj]], and converts
 MusicXML files to the notation described in the next section,
-according to the rules given in [[doc/conversion/conversion.org]].
+according to the rules given in [[doc/conversion/conversion.pdf]].
 ** TODO Musical Notation
 * Bibliography
 The papers cited in this documentation are given in this section. For
