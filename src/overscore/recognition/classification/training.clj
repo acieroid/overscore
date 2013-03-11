@@ -48,12 +48,12 @@
          (persistent! res)))))
 
 (defn resize-to-vector
-  "Similar to to-vector, but first resize the image to 20x20 image"
+  "Similar to to-vector, but first resize the image to 20x20"
   ([^BufferedImage img]
-     (to-vector (resize-image img 20 20)))
+     (to-vector (resize-image-or-fill img 20 20)))
   ([^BufferedImage img segment]
      (to-vector
-      (resize-image
+      (resize-image-or-fill
        (.getSubimage img
                      (:start-x segment) (:start-y segment)
                      (segment-width segment) (segment-height segment))

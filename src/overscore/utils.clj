@@ -2,6 +2,7 @@
 (ns overscore.utils
   (:use clojure.java.io)
   (:import java.awt.image.BufferedImage
+           java.awt.Color
            javax.imageio.ImageIO
            java.io.PushbackReader
            java.io.File))
@@ -134,13 +135,26 @@
       (.setRGB out x y (f x y (.getRGB img x y))))
     out))
 
-(defn resize-image
-  "Resize an image to a given size. Return the newly created image"
+(defn resize-image-or-fill
+  "Resize an image to a given size. Return the newly created image. If
+  the image is smaller than the given size, it is only copied, and the
+  rest of the pixels remains white."
   [^BufferedImage img width height & {:keys [type]
                                       :or {type BufferedImage/TYPE_BYTE_BINARY}}]
   (let [resized (BufferedImage. width height type)
         g (.createGraphics resized)]
-    (.drawImage g img 0 0 width height nil)
+    (when (or (< (.getWidth img) width)
+              (< (.getHeight img) height))
+      ;; fill the image in in white first
+      (.setPaint g Color/WHITE)
+      (.fill g (java.awt.geom.Rectangle2D$Double. 0 0 width height)))
+    (.drawImage g img 0 0
+                (if (> (.getWidth img) width)
+                  width
+                  (.getWidth img))
+                (if (> (.getHeight img) height)
+                  height
+                  (.getHeight img)) nil)
     (.dispose g)
     resized))
 
