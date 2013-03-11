@@ -196,59 +196,59 @@ LL(1) grammar:
 <P> → <clef> <P'>
 
 <P'> → <time> <notes>
-     | <notes>
+       <notes>
 
 <notes> → <note> <notes>
-        | ε
+          ε
 
 <note> → <pre> <note_body> <post>
-       | <rest>
+         <rest>
 
 <pre> → :sharp
-      | :flat
-      | :natural
+        :flat
+        :natural
 
 <post> → <flag>
-       | :dot_set
+         :dot_set
      
 
 <note_body> → <beam> <notehead>
-            | <notehead>
+              <notehead>
 
 <time> → :common_time
-       | :cut_time
-       | :time_four
-       | :time_four_four
-       | :time_six_eight
-       | :time_three
-       | :time_three_four
-       | :time_two
-       | :time_two_four
+         :cut_time
+         :time_four
+         :time_four_four
+         :time_six_eight
+         :time_three
+         :time_three_four
+         :time_two
+         :time_two_four
 
 <clef> → :g_clef
-       | :g_clef_8vb
-       | :f_clef
-       | :c_clef
+         :g_clef_8vb
+         :f_clef
+         :c_clef
 
 <rest> → :eighth_rest
-       | :one_16th_rest
-       | :quarter_rest
+         :one_16th_rest
+         :quarter_rest
 
 <notehead> → :notehead_black
-           | :notehead_black_2
-           | :notehead_black_3
-           | :notehead_void
-           | :notehead_void_2
-           | :whole_note
-           | :whole_note_2
+             :notehead_black_2
+             :notehead_black_3
+             :notehead_void
+             :notehead_void_2
+             :whole_note
+             :whole_note_2
 
 <beam> → :beam
-       | :beam_hook
+         :beam_hook
 
 <flag> → :flag_1
-       | :flag_1_up
-       | :flag_2
-       | :flag_2_up
+         :flag_1_up
+         :flag_2
+         :flag_2_up
 #+END_SRC
 * Musical Notation
 * Bibliography
