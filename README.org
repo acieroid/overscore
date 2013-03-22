@@ -6,8 +6,8 @@ and plays them using [[http://overtone.github.com/][Overtone]]. Overscore consis
   - a MusicXML parser that compiles MusicXML files into Clojure files
   - multiple helper macros and functions built over Overtone to have a
     system more adapted to encode classical music
-* STARTED How it works
-** STARTED OMR
+* How it works
+** OMR
 The initial plan for the OMR part is documented in
 [[doc/design/design.pdf]]. In this section we will briefly describe how
 it is currently implemented and discuss some results.
@@ -188,7 +188,7 @@ training set could be improved.
 The kNN algorithm implemented by hand also suffers from huge performance
 issues.
 
-*** STARTED Part 4: Musical Semantics
+*** TODO Part 4: Musical Semantics
 The musical semantics are defined by a set of rule, as the following
 LL(1) grammar:
 
@@ -327,8 +327,7 @@ associated with a set of instruments:
 
 #+BEGIN_SRC clojure
 (defsong foo-song
-  {:time-signature [4 4]
-   :tempo 60}
+  {:time-signature [4 4] :tempo 60}
   [foo-twice sampled-piano]
   [foo-twice pad])
 #+END_SRC
@@ -354,8 +353,7 @@ For example:
 (defbar foo
   (repeat-elements 2
     (play-seq
-      (simple-seq 1/2
-        :C4 :A4 :G4)
+      (simple-seq 1/2 :C4 :A4 :G4)
       (play-chord
         (play :C5 1/2)
         (play :A5 1/2)
