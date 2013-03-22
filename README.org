@@ -286,19 +286,19 @@ to be played at:
 
 #+BEGIN_SRC clojure
 (bar
-  (beat 1 (play :C4 1))
-  (beat 2 (play :A4 1))
-  (beat 3 (play :G4 1))
-  (beat 4 (play :C5 1)))
+  (beat 0 (play :C4 1))
+  (beat 1 (play :A4 1))
+  (beat 2 (play :G4 1))
+  (beat 3 (play :C5 1)))
 #+END_SRC
 
 A bar can also be named, to be reffered to later:
 #+BEGIN_SRC clojure
 (defbar foo
-  (beat 1 (play :C4 1))
-  (beat 2 (play :A4 1))
-  (beat 3 (play :G4 1))
-  (beat 4 (play :C5 1)))
+  (beat 0 (play :C4 1))
+  (beat 1 (play :A4 1))
+  (beat 2 (play :G4 1))
+  (beat 3 (play :C5 1)))
 #+END_SRC
 
 Multiple combinators simplifies the notation, and are described later.
@@ -381,8 +381,9 @@ mordents, …).
 One current defect of the implementation of the notation is that it
 spawns lots of Overtone nodes, and this number is limited by the
 SuperCollider synth server (while apparently this limitation could be
-changed). This results in bugs when stopping a song when it has not
-been entirely playing, and relaunching it later.
+changed). This might results in bugs ("No more IDs!" message) when
+stopping a song when it has not been entirely playing, and relaunching
+it later. See [[http://groups.google.com/group/overtone/tree/browse_frm/month/2012-10/8adf6710630c6987?rnum=51&_done=%2Fgroup%2Fovertone%2Fbrowse_frm%2Fmonth%2F2012-10%3F][here]] for more explanations.
 * Bibliography
 The papers cited in this documentation are given in this section. For
 more papers about the topic of OMR, see =doc/design/design.pdf=.
