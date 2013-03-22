@@ -6,8 +6,8 @@ and plays them using [[http://overtone.github.com/][Overtone]]. Overscore consis
   - a MusicXML parser that compiles MusicXML files into Clojure files
   - multiple helper macros and functions built over Overtone to have a
     system more adapted to encode classical music
-* TODO How it works
-** TODO OMR
+* STARTED How it works
+** STARTED OMR
 The initial plan for the OMR part is documented in
 [[doc/design/design.pdf]]. In this section we will briefly describe how
 it is currently implemented and discuss some results.
@@ -188,7 +188,7 @@ training set could be improved.
 The kNN algorithm implemented by hand also suffers from huge performance
 issues.
 
-*** TODO Part 4: Musical Semantics
+*** STARTED Part 4: Musical Semantics
 The musical semantics are defined by a set of rule, as the following
 LL(1) grammar:
 
@@ -254,7 +254,84 @@ LL(1) grammar:
 A simple MusicXML parser is implemented in [[src/musicxml.clj][musicxml.clj]], and converts
 MusicXML files to the notation described in the next section,
 according to the rules given in [[doc/conversion/conversion.pdf]].
-** TODO Musical Notation
+** Musical Notation
+This section describes the musical notation used to describe the
+scores. Some examples of scores transcribed into this notation can be
+found in [[src/overscore/examples]].
+*** Notes and rests
+The most basic element of a score is a note. A note is expressed as its
+duration and its pitch:
+
+#+BEGIN_SRC clojure
+(play :A4 1)
+#+END_SRC
+
+This corresponds to a 440Hz A, played as a quarter note. The
+interpretation of the duration depends on the time signature and the
+tempo of the score. In this case, we assume that the time signature is
+4/4, so a duration of 1 corresponds to a quarter of the entire bar
+(so, a quarter note).
+
+A rest is simply a note without pitch, which is noted =:rest=:
+
+#+BEGIN_SRC clojure
+(play :rest 1)
+#+END_SRC
+
+*** Bars
+A bar contains notes played at certain times. With the most basic
+constructs, it can be defined as a set of notes and the time they have
+to be played at:
+
+#+BEGIN_SRC clojure
+(bar
+  (beat 1 (play :C4 1))
+  (beat 2 (play :A4 1))
+  (beat 3 (play :G4 1))
+  (beat 4 (play :C5 1)))
+#+END_SRC
+
+A bar can also be named, to be reffered to later:
+#+BEGIN_SRC clojure
+(defbar foo
+  (beat 1 (play :C4 1))
+  (beat 2 (play :A4 1))
+  (beat 3 (play :G4 1))
+  (beat 4 (play :C5 1)))
+#+END_SRC
+
+Multiple combinators simplifies the notation, and are described later.
+*** Progressions
+A progression is a set of bars to be played in sequence. It can also
+be defined anonymously with =prog=, or named with =defprog=:
+
+#+BEGIN_SRC clojure
+(defprog foo-twice
+  foo foo)
+#+END_SRC
+
+Progression definitions can also be simplified through the use of
+combinators described later.
+
+The tempo and time signature can be changed during a progression:
+
+#+BEGIN_SRC clojure
+(defprog foo-twice
+  {:tempo 60} foo {:tempo 40} foo)
+#+END_SRC
+
+*** Songs
+A song consists of a set of progressions, played simultaneously,
+associated with a set of instruments:
+
+#+BEGIN_SRC clojure
+(defsong foo-song
+  {:time-signature [4 4]
+   :tempo 60}
+  [foo-twice sampled-piano]
+  [foo-twice pad])
+#+END_SRC
+*** Combinators
 * Bibliography
 The papers cited in this documentation are given in this section. For
 more papers about the topic of OMR, see =doc/design/design.pdf=.

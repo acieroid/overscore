@@ -138,7 +138,7 @@ default duration is 1"
   (apply play-seq (flatten (clojure.core/repeat n bars))))
 
 (defmacro prog
-  "Returns a bar, containing bars to be played"
+  "Returns a progression, containing bars to be played"
   [& body]
   `(fn [state# time# inst#]
        (reduce
