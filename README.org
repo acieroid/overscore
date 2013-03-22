@@ -256,8 +256,9 @@ MusicXML files to the notation described in the next section,
 according to the rules given in [[doc/conversion/conversion.pdf]].
 ** Musical Notation
 This section describes the musical notation used to describe the
-scores. Some examples of scores transcribed into this notation can be
-found in [[src/overscore/examples]].
+scores. The notation is implemented in [[src/overscore/notation.clj]], and
+some examples of scores transcribed into this notation can be found in
+[[src/overscore/examples]].
 *** Notes and rests
 The most basic element of a score is a note. A note is expressed as its
 duration and its pitch:
@@ -332,6 +333,47 @@ associated with a set of instruments:
   [foo-twice pad])
 #+END_SRC
 *** Combinators
+Notes, bars and progressions are internally represented as a functions
+that takes a state (containing the tempo and the time signature), a
+time (at which to play the element), and an instrument, and returns
+the duration of the element. When called, those function spawn
+Overtone notes that will be played at the given time, and returns
+immediately. So, they are all considered as /elements/, and can be
+manipulated with the following predefined combinators:
+
+  - =play-chords=: plays all the arguments at the same time
+  - =play-seq=: play all the arguments one after the other
+  - =simple-seq=: a macro that ease the writing of multiple notes in
+    sequence, without needing to call =simple-seq= and =play=
+  - =beat=: delay the time at which the element will be played by n beats
+  - =repeat-elements=: repeat an element n times
+
+For example:
+
+#+BEGIN_SRC clojure
+(defbar foo
+  (repeat-elements 2
+    (play-seq
+      (simple-seq 1/2
+        :C4 :A4 :G4)
+      (play-chord
+        (play :C5 1/2)
+        (play :A5 1/2)
+        (play :G5 1/2)))))
+
+(defprog foo-prog
+  (repeat-elements 2 foo))
+#+END_SRC
+
+If needed, other combinators can be defined easily, since they only
+consists of manipulating clojure functions.
+
+*** Playing a score
+A score can be played by using the =start= function, which takes a
+song as argument. A element (note, bar, progression) can be played
+using the =start-element= function, which takes as argument at least
+the element and the instrument it should be played with (and
+optionally the tempo and time signature).
 * Bibliography
 The papers cited in this documentation are given in this section. For
 more papers about the topic of OMR, see =doc/design/design.pdf=.
