@@ -374,6 +374,17 @@ song as argument. A element (note, bar, progression) can be played
 using the =start-element= function, which takes as argument at least
 the element and the instrument it should be played with (and
 optionally the tempo and time signature).
+*** Improvements
+The notation currently works well, but lacks lots of classical musical
+constructs. It should not be to hard to extend it to support more
+complicated musical constructs (ties, slurs, tuplets, staccato,
+mordents, …).
+
+One current defect of the implementation of the notation is that it
+spawns lots of Overtone nodes, and this number is limited by the
+SuperCollider synth server (while apparently this limitation could be
+changed). This results in bugs when stopping a song when it has not
+been entirely playing, and relaunching it later.
 * Bibliography
 The papers cited in this documentation are given in this section. For
 more papers about the topic of OMR, see =doc/design/design.pdf=.
