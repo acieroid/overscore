@@ -76,5 +76,5 @@
     "segmentation"
     (call-if (rest args) 3 segmentation)
     "classification"
-    (call-if (rest args) 3 classification)
+    (call-if (rest args) 4 classification)
     (usage)))

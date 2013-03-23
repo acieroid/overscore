@@ -1,7 +1,4 @@
-<P> → <clef> <P'>
-
-<P'> → <time> <notes>
-     | <notes>
+<system> → <clef> <time> <notes>
 
 <notes> → <note> <notes>
         | ε
@@ -12,6 +9,7 @@
 <pre> → :sharp
       | :flat
       | :natural
+      | ε
 
 <post> → <flag>
        | :dot_set
@@ -29,11 +27,13 @@
        | :time_three_four
        | :time_two
        | :time_two_four
+       | ε
 
 <clef> → :g_clef
        | :g_clef_8vb
        | :f_clef
        | :c_clef
+       | ε
 
 <rest> → :eighth_rest
        | :one_16th_rest
