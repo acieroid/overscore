@@ -383,7 +383,7 @@ associated with a set of instruments:
   [foo-twice pad])
 #+END_SRC
 *** Combinators
-Notes, bars and progressions are internally represented as a functions
+Notes, bars and progressions are internally represented as a function
 that takes a state (containing the tempo and the time signature), a
 time (at which to play the element), and an instrument, and returns
 the duration of the element. When called, those function spawn
