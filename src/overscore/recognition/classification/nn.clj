@@ -90,7 +90,7 @@
       (.iteration trainer)
       (recur (inc i)))))
 
-(defn create-labels
+(defn nn-create-labels
   "Create the labels needed by the neural network"
   [training-set]
   (let [syms (keys (group-by (fn [x] x) (map :class training-set)))]
@@ -100,7 +100,7 @@
   "Create the neural network and its trainer, for a given training set"
   [training-set]
   (when (== (count @labels) 0)
-    (println "No labels. Did you call create-labels?"))
+    (println "No labels. Did you call nn-create-labels?"))
   (swap! net (fn [_] (network :input 400
                               :output (count @labels)
                               :hidden [400])))
@@ -152,11 +152,16 @@
   (swap! net
          (fn [_] (EncogDirectoryPersistence/loadObject (File. src)))))
 
+(defn classify-nn-data
+  "Classify a vector representing a segment content"
+  [input]
+  (let [vector (into [] (.getData (.compute @net (data input))))
+        class (vector-to-class vector)]
+    class))
+
 (defn classify-nn
   "Classify a symbol using the trained neural network"
   [^BufferedImage img segment]
   (let [_ (draw-vector (resize-to-vector img segment) 20 20 (str (temp-name "/tmp/foo") ".png"))
-        input (data (resize-to-vector img segment))
-        vector (into [] (.getData (.compute @net input)))
-        class (vector-to-class vector)]
-    class))
+        input (resize-to-vector img segment)]
+    (classify-nn-data input)))

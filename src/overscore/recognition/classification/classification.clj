@@ -3,6 +3,7 @@
         overscore.recognition.segmentation.segment
         overscore.recognition.classification.training
         overscore.recognition.classification.opencv-knn)
+  (:require overscore.recognition.classification.nn)
   (:import javax.imageio.ImageIO
            java.awt.Color
            java.awt.image.BufferedImage
@@ -23,6 +24,17 @@
       (.drawString g (str class)
                    start-x end-y))
     (ImageIO/write colored-img "png" (File. "/tmp/debug-classification.png"))))
+
+(defn extract-incanter-data
+  "Extract the data returned by evaluate-classification-method in
+  order to view it with incanter bar-chart, with:
+
+  (let [[classes values] (extract-incanter-data data)]
+    (view (bar-chart classes data :legend true
+                     :group-by (cycle [\"P\" \"R\" \"F₁\"]))))"
+  [data]
+  [(flatten (map #(repeat 3 (first %)) data))
+   (flatten (map rest data))])
 
 (defn evaluate-classification-method
   "Evaluate a classification method m (which takes an training set data as input),
@@ -45,14 +57,13 @@
                     ;;                  v v v v
                     (fn [class] [class [0 0 0 0]])
                     (keys (group-by (fn [x] x) (map :class @training-set))))]
-      (println (first data))
       (if (empty? data)
         (map (fn [[class [tp fp fn tn]]]
                (let [P (if (== (+ tp fp) 0)
-                         :inf
+                         0
                          (/ tp (+ tp fp)))
                      R (if (== (+ tp fn) 0)
-                         :inf
+                         0
                          (/ tp (+ tp fn)))
                      F1 (if (or (= P :inf) (= R :inf)
                                 (== P 0) (== R 0))
@@ -86,12 +97,25 @@
   [training-set-path in-img in-segments out]
   (let [img (ImageIO/read (File. in-img))
         _ (load-training-set-images training-set-path)
+        ;; Uncomment for using neural networks, from here...
+        ;; --------------------------------------
+        ;; classify overscore.recognition.classification.nn/classify-nn
+        ;; _ (do
+        ;;     (overscore.recognition.classification.nn/nn-create-labels @training-set)
+        ;;     (overscore.recognition.classification.nn/load-network "net.eg"))
+        ;; ... until here
+        ;; --------------------------------------
+        ;; Uncomment for using kNN, from here...
+        ;; --------------------------------------
+        classify classify-opencv-knn
         _ (create-knn @training-set)
+        ;; ... until here
+        ;; --------------------------------------
         segments-vectors (read-vector in-segments)
         segments (map (fn [[sx sy ex ey]]
                         (->segment sx sy ex ey))
                       segments-vectors)
-        classes (map #(classify-opencv-knn img %) segments)
+        classes (map #(classify img %) segments)
         output (map (fn [seg class] [(:start-x seg)
                                      (:start-y seg)
                                      (:end-x seg)
