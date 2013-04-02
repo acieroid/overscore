@@ -57,6 +57,29 @@ Possible arguments:
         play the song called <name> defined in the file <file>
 #+END_SRC
 
+Some example data is provided in the [[example]] directory, which
+contains both input data and (almost) perfect output data. For
+example, after running the following command:
+
+#+BEGIN_SRC shell
+$ lein2 run preprocessing example/input/furelise.png /tmp/furelise.png /tmp/refs.txt
+#+END_SRC
+
+The image =/tmp/furelise.png= should (roughly) correspond to the image
+[[example/preprocessed/furelise.png]], and the file =/tmp/refs.txt= to
+[[example/preprocessed/refs.txt]].
+
+The other possible commands, on the example files, are:
+
+#+BEGIN_SRC shell
+# Stores the output in the same directory as the input
+$ lein2 run staffline example/preprocessed/furelise.png
+
+$ lein2 run segmentation example/staffline/furelise-0.png examples/preprocessed/refs.txt /tmp/segs.txt
+
+$ lein2 run classification training-set/ example/staffline/furelise-0.png example/segmentation/segs.txt /tmp/classes.txt
+#+END_SRC
+
 * How it works
 ** OMR
 The initial plan for the OMR part is documented in
