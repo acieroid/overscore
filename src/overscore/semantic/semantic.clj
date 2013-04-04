@@ -71,7 +71,7 @@
         time-default :time_four_four
         clef-default :g_clef]
     (case symbol
-      :system (let [[clef groups'] (parse groups :clefs refs staves)
+      :system (let [[clef groups'] (parse groups :clef refs staves)
                     [time groups''] (parse groups :time refs staves)
                     [notes rest] (parse groups' :notes refs staves)]
                 [(->score-system clef time notes) rest])
@@ -124,17 +124,20 @@
 
 (defn time-to-musicxml
   [time]
+  (println time)
   (let [[beats beats-type]
-        (case time
-          :common_time [4 4]
-          :cut_time
-          :time_four
-          :time_four_four [4 4]
-          :time_six_eight [6 8]
-          :time_three
-          :time_three_four [3 4]
-          :time_two
-          :time_two_four [2 4])]
+        (if (nil? time)
+          [4 4] ;; 4-4 by default
+          (case time
+            :common_time [4 4]
+            :cut_time [2 2]
+            :time_four [4 4]
+            :time_four_four [4 4]
+            :time_six_eight [6 8]
+            :time_three [3 4]
+            :time_three_four [3 4]
+            :time_two [2 4]
+            :time_two_four [2 4]))]
     {:tag :time :attrs nil
      :content [{:tag :beats :attrs nil :content [(str beats)]}
                {:tag :beats-type :attrs nil :content [(str beats-type)]}]}))
@@ -142,11 +145,13 @@
 (defn clef-to-musicxml
   [clef]
   (let [[sign line]
-        (case clef
-          :g_clef ["G" 2]
-          :g_clef_8vb
-          :f_clef
-          :c_clef)]
+        (if (nil? clef)
+          ["G" 2] ;; G clef by default
+          (case clef
+            :g_clef ["G" 2]
+            :g_clef_8vb ["G" 2]
+            :f_clef ["F" 4]
+            :c_clef ["C" 4]))]
     {:tag :clef :attrs nil
      :content [{:tag :sign :attrs nil :content [sign]}
                {:tag :line :attrs nil :content [(str line)]}]}))
@@ -157,20 +162,22 @@
    :content [{:tag :pitch :attrs nil
               :content [{:tag :step :attrs nil :content [(:step note)]}
                         {:tag :octave :attrs nil :content [(str (:octave note))]}]}
-             {:tag :duration :attrs nil :content [(str (:duration note))]}]})
+             ;{:tag :duration :attrs nil :content [(str (:duration note))]}
+             ]})
 
 (defn system-to-musicxml
   "Convert a system to MusicXML data"
   [system]
   ;; Only one measure for the moment
-  {:tag :measure :attrs {:number "1"}
-   :content [{:tag :attributes :attrs nil
-              :content [{:tag :divisions :attrs nil
-                         :content ["1"]}
-                        {:tag :key :attrs nil :content []}
-                        (time-to-musicxml (:time system))
-                        (clef-to-musicxml (:clef system))]}
-             (map note-to-musicxml (:notes system))]})
+  [{:tag :measure :attrs {:number "1"}
+    :content [{:tag :attributes :attrs nil
+               :content (concat
+                         [{:tag :divisions :attrs nil
+                           :content ["1"]}
+                          {:tag :key :attrs nil :content []}
+                          (time-to-musicxml (:time system))
+                          (clef-to-musicxml (:clef system))]
+                         (map note-to-musicxml (:notes system)))}]}])
 
 (defn to-musicxml
   "Convert what 'interpret' computed into MusicXML"
@@ -192,4 +199,5 @@
         sorted (group-vertically segments)
         score (interpret sorted refs staves)
         musicxml (to-musicxml score)]
+    (println musicxml)
     (xml/emit musicxml)))
