@@ -1,6 +1,5 @@
 ([86 122 1 109      :g_clef]
  [136 160 29 87     :time_three_four]
- [185 206 49 59     :none]
  [268 288 29 45     :notehead_black]
  [268 288 78 89     :beam]
  [293 309 23 66     :sharp]
