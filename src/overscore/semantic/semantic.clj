@@ -52,7 +52,7 @@
   "Convert a group of symbols to a note"
   [pre beam head post refs staves]
   ;; TODO
-  (->score-note "A" 4 1/4))
+  (->score-note "A" 4 1))
 
 (defn parse
   "Parse a non-terminal from the groups of note"
@@ -162,7 +162,7 @@
             :g_clef_8vb ["G" 2]
             :f_clef ["F" 4]
             :c_clef ["C" 4]))]
-    {:tag :clef :attrs nil
+    {:tag :clef :attrs {:number "1"}
      :content [{:tag :sign :attrs nil :content [sign]}
                {:tag :line :attrs nil :content [(str line)]}]}))
 
@@ -179,14 +179,13 @@
   [system]
   ;; Only one measure for the moment
   [{:tag :measure :attrs {:number "1"}
-    :content [{:tag :attributes :attrs nil
-               :content (concat
-                         [{:tag :divisions :attrs nil
-                           :content ["1"]}
-                          {:tag :key :attrs nil :content []}
-                          (time-to-musicxml (:time system))
-                          (clef-to-musicxml (:clef system))]
-                         (map note-to-musicxml (:notes system)))}]}])
+    :content (cons {:tag :attributes :attrs nil
+                    :content [{:tag :divisions :attrs nil
+                               :content ["1"]}
+                              {:tag :key :attrs nil :content []}
+                              {:tag :staves :attrs nil :content ["1"]}
+                              (clef-to-musicxml (:clef system))]}
+                   (map note-to-musicxml (:notes system)))}])
 
 (defn to-musicxml
   "Convert what 'interpret' computed into MusicXML"
