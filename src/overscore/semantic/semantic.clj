@@ -1,9 +1,9 @@
 ;;; Find the semantic of the score given the position and class of segments
 (ns overscore.semantic.semantic
   (:use clojure.java.io
+        clojure.contrib.prxml
         overscore.utils
-        overscore.recognition.segmentation.segment)
-  (:require [clojure.xml :as xml]))
+        overscore.recognition.segmentation.segment))
 
 (defrecord score-system [clef time notes])
 (defrecord score-rest [type])
@@ -148,9 +148,9 @@
             :time_three_four [3 4]
             :time_two [2 4]
             :time_two_four [2 4]))]
-    {:tag :time :attrs nil
-     :content [{:tag :beats :attrs nil :content [(str beats)]}
-               {:tag :beat-type :attrs nil :content [(str beat-type)]}]}))
+    [:time
+     [:beats beats]
+     [:beat-type beat-type]]))
 
 (defn clef-to-musicxml
   [clef]
@@ -162,40 +162,39 @@
             :g_clef_8vb ["G" 2]
             :f_clef ["F" 4]
             :c_clef ["C" 4]))]
-    {:tag :clef :attrs {:number "1"}
-     :content [{:tag :sign :attrs nil :content [sign]}
-               {:tag :line :attrs nil :content [(str line)]}]}))
+    [:clef {:number 1}
+     [:sign sign]
+     [:line (str line)]]))
 
 (defn note-to-musicxml
   [note]
-  {:tag :note :attrs nil
-   :content [{:tag :pitch :attrs nil
-              :content [{:tag :step :attrs nil :content [(:step note)]}
-                        {:tag :octave :attrs nil :content [(str (:octave note))]}]}
-             {:tag :duration :attrs nil :content [(str (:duration note))]}]})
+  [:note
+   [:pitch
+    [:step (:step note)]
+    [:octave (str (:octave note))]]
+   [:duration (str (:duration note))]])
 
 (defn system-to-musicxml
   "Convert a system to MusicXML data"
   [system]
   ;; Only one measure for the moment
-  [{:tag :measure :attrs {:number "1"}
-    :content (cons {:tag :attributes :attrs nil
-                    :content [{:tag :divisions :attrs nil
-                               :content ["1"]}
-                              {:tag :key :attrs nil :content []}
-                              {:tag :staves :attrs nil :content ["1"]}
-                              (clef-to-musicxml (:clef system))]}
-                   (map note-to-musicxml (:notes system)))}])
+  (into []
+        (concat
+         [:measure {:number "1"}
+          [:attributes
+           [:divisions "1"]
+           [:key]
+           [:staves "1"]
+           (clef-to-musicxml (:clef system))]]
+         (map note-to-musicxml (:notes system)))))
 
 (defn to-musicxml
   "Convert what 'interpret' computed into MusicXML"
   [score]
-  {:tag :score-partwise :attrs {:version "3.0"}
-   :content [{:tag :part-list :attrs nil
-              :contents [{:tag :score-part :attrs {:id "P1"}
-                          :content []}]}
-             {:tag :part :attrs {:id "P1"}
-              :content (system-to-musicxml score)}]})
+  [:score-partwise {:version "3.0"}
+   [:part-list [:score-part {:id "P1"}]]
+   [:part {:id "P1"}
+    (system-to-musicxml score)]])
 
 (defn semantic
   "Find the semantic of a score given the notes positions and classes"
@@ -207,5 +206,10 @@
         sorted (group-vertically segments)
         score (interpret sorted refs staves)
         musicxml (to-musicxml score)]
-    (binding [*out* (writer out-xml)]
-      (xml/emit musicxml))))
+    (println musicxml)
+    (prxml musicxml)
+    (spit
+     out-xml
+     (with-out-str
+       (binding [*prxml-indent* 2]
+         (prxml musicxml))))))
