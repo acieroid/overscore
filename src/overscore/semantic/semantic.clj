@@ -162,8 +162,7 @@
    :content [{:tag :pitch :attrs nil
               :content [{:tag :step :attrs nil :content [(:step note)]}
                         {:tag :octave :attrs nil :content [(str (:octave note))]}]}
-             ;{:tag :duration :attrs nil :content [(str (:duration note))]}
-             ]})
+             {:tag :duration :attrs nil :content [(str (:duration note))]}]})
 
 (defn system-to-musicxml
   "Convert a system to MusicXML data"
