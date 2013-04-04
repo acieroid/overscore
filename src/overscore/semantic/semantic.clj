@@ -1,6 +1,7 @@
 ;;; Find the semantic of the score given the position and class of segments
 (ns overscore.semantic.semantic
-  (:use overscore.utils
+  (:use clojure.java.io
+        overscore.utils
         overscore.recognition.segmentation.segment)
   (:require [clojure.xml :as xml]))
 
@@ -50,7 +51,6 @@
 (defn interpret-note
   "Convert a group of symbols to a note"
   [pre beam head post refs staves]
-  (println pre beam head post staves)
   ;; TODO
   (->score-note "A" 4 1/4))
 
@@ -69,14 +69,20 @@
         beams [:beam :beam_hook]
         flags [:flag_1 :flag_1_up :flag_2 :flag_2_up]
         time-default :time_four_four
-        clef-default :g_clef]
+        clef-default :g_clef
+        notes-first (concat accidentals rests beams noteheads)]
+    (println symbol (first groups))
     (case symbol
       :system (let [[clef groups'] (parse groups :clef refs staves)
-                    [time groups''] (parse groups :time refs staves)
-                    [notes rest] (parse groups' :notes refs staves)]
+                    [time groups''] (parse groups' :time refs staves)
+                    [notes rest] (parse groups'' :notes refs staves)]
                 [(->score-system clef time notes) rest])
-      :notes (let [[note groups'] (parse groups :note refs staves)]
-               [note groups'])
+      :notes (let [[note groups'] (parse groups :note refs staves)
+                   [notes groups'']
+                   (if (group-contains (first groups) notes-first)
+                     (parse groups' :notes refs staves)
+                     [[] groups'])]
+               [(cons note notes) groups''])
       :note (if (group-contains (first groups) rests)
               (let [seg (group-extract (first groups) rests)]
                 [(->score-rest (:class seg)) (rest groups)])
@@ -94,7 +100,7 @@
                 [(:class seg) (rest groups)])
               (parse groups :flag refs staves))
       :note_body (let [[beam groups'] (parse groups :beam refs staves)
-                       [notehead groups''] (parse groups :notehead refs staves)]
+                       [notehead groups''] (parse groups' :notehead refs staves)]
                    [[beam notehead] groups''])
       :time (if (group-contains (first groups) times)
               (let [seg (group-extract (first groups) times)]
@@ -108,7 +114,7 @@
                   (let [seg (group-extract (first groups) noteheads)]
                     [seg (rest groups)])
                   [:none groups])
-      :beam (if (group-contains (first groups) noteheads)
+      :beam (if (group-contains (first groups) beams)
               (let [seg (group-extract (first groups) beams)]
                 [(:class seg) (rest groups)])
               [:none groups])
@@ -120,12 +126,16 @@
 (defn interpret
   "Interpret the groups of symbols as notes that forms a score"
   [groups refs staves]
-  (parse groups :system refs staves))
+  (let [[system rest] (parse groups :system refs staves)]
+    (if (empty? rest)
+      system
+      ;; TODO
+      (do (println (first rest))
+          system))))
 
 (defn time-to-musicxml
   [time]
-  (println time)
-  (let [[beats beats-type]
+  (let [[beats beat-type]
         (if (nil? time)
           [4 4] ;; 4-4 by default
           (case time
@@ -140,7 +150,7 @@
             :time_two_four [2 4]))]
     {:tag :time :attrs nil
      :content [{:tag :beats :attrs nil :content [(str beats)]}
-               {:tag :beats-type :attrs nil :content [(str beats-type)]}]}))
+               {:tag :beat-type :attrs nil :content [(str beat-type)]}]}))
 
 (defn clef-to-musicxml
   [clef]
@@ -190,13 +200,13 @@
 
 (defn semantic
   "Find the semantic of a score given the notes positions and classes"
-  [in-segments in-refs in-staves]
-  (let [segments-vectors (read-vector in-segments)
+  [in-classes in-refs in-staves out-xml]
+  (let [segments-vectors (read-vector in-classes)
         refs (read-vector in-refs)
         staves (read-vector in-staves)
         segments (map to-classified-segment segments-vectors)
         sorted (group-vertically segments)
         score (interpret sorted refs staves)
         musicxml (to-musicxml score)]
-    (println musicxml)
-    (xml/emit musicxml)))
+    (binding [*out* (writer out-xml)]
+      (xml/emit musicxml))))
