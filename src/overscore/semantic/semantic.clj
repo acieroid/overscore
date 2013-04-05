@@ -99,17 +99,42 @@
   [group classes]
   (not (nil? (group-extract group classes))))
 
+(defn generate-seq
+  "Generate an infinite sequence of note (increasing or decreasing,
+  depending on f), starting at step and octave"
+  [step octave f]
+  (let [notes ["C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab" "A" "Bb" "B"]
+        rev-notes (concat ["C"] (reverse (drop 1 notes)))
+        steps (drop-while #(not (= step %))
+                          (cycle
+                           (case f
+                             :inc notes
+                             :dec rev-notes)))
+        n (.indexOf notes step)
+        octaves (repeatedly (let [n (atom n)
+                                  octave (atom octave)]
+                              (fn []
+                                (swap! n inc)
+                                (when (= @n (inc (count notes)))
+                                  (swap! n (fn [_] 0))
+                                  (swap! octave 
+                                         (case f
+                                           :inc inc
+                                           :dec dec)))
+                                @octave)))]
+    (map (fn [step octave] [step octave]) steps octaves)))
+
 (defn find-note-step
   "Find the step of a note (eg. A) given its segment and the positions
   of the staff lines"
-  [head refs staves]
+  [head clef refs staves]
   ;; TODO
   ["A" 4])
 
 (defn interpret-note
   "Convert a group of symbols to a note"
-  [pre beam head post refs staves]
-  (let [[step octave] (find-note-step head refs staves)
+  [pre beam head post clef refs staves]
+  (let [[step octave] (find-note-step clef head refs staves)
         step-with-accidental (if (= pre :sharp)
                                 (str step "#")
                                 (if (= pre :flat)
@@ -138,7 +163,7 @@
 
 (defn parse
   "Parse a non-terminal from the groups of note"
-  [groups symbol refs staves]
+  [groups symbol refs staves clef]
   (let [rests [:quarter_rest :eighth_rest :one_16th_rest]
         accidentals [:sharp :flat :natural]
         dots [:dot_set]
@@ -155,14 +180,14 @@
         clef-default :g_clef
         notes-first (concat accidentals rests beams noteheads)]
     (case symbol
-      :system (let [[clef groups'] (parse groups :clef refs staves)
-                    [time groups''] (parse groups' :time refs staves)
-                    [notes rest] (parse groups'' :notes refs staves)]
+      :system (let [[clef groups'] (parse groups :clef refs staves clef)
+                    [time groups''] (parse groups' :time refs staves clef)
+                    [notes rest] (parse groups'' :notes refs staves clef)]
                 [(->score-system clef time notes) rest])
-      :notes (let [[note groups'] (parse groups :note refs staves)
+      :notes (let [[note groups'] (parse groups :note refs staves clef)
                    [notes groups'']
                    (if (group-contains (first groups') notes-first)
-                     (parse groups' :notes refs staves)
+                     (parse groups' :notes refs staves clef)
                      [[] groups'])]
                [(cons note notes) groups''])
       :note (if (group-contains (first groups) rests)
@@ -173,9 +198,9 @@
                                  :eighth_rest 1/2
                                  :one_16th_rest 1/4))
                  (rest groups)])
-              (let [[pre _] (parse groups :pre refs staves)
-                    [[beam head] _] (parse groups :note_body refs staves)
-                    [post _] (parse groups :post refs staves)]
+              (let [[pre _] (parse groups :pre refs staves clef)
+                    [[beam head] _] (parse groups :note_body refs staves clef)
+                    [post _] (parse groups :post refs staves clef)]
                 [(interpret-note pre beam head post refs staves) (rest groups)]))
       :pre (if (group-contains (first groups) accidentals)
              (let [seg (group-extract (first groups) accidentals)]
@@ -185,9 +210,9 @@
               ;; TODO: a group can contain a flag and a dot
               (let [seg (group-extract (first groups) dots)]
                 [(:class seg) groups])
-              (parse groups :flag refs staves))
-      :note_body (let [[beam _] (parse groups :beam refs staves)
-                       [notehead _] (parse groups :notehead refs staves)]
+              (parse groups :flag refs staves clef))
+      :note_body (let [[beam _] (parse groups :beam refs staves clef)
+                       [notehead _] (parse groups :notehead refs staves clef)]
                    [[beam notehead] groups])
       :time (if (group-contains (first groups) times)
               (let [seg (group-extract (first groups) times)]
@@ -213,7 +238,7 @@
 (defn interpret
   "Interpret the groups of symbols as notes that forms a score"
   [groups refs staves]
-  (let [[system rest] (parse groups :system refs staves)]
+  (let [[system rest] (parse groups :system refs staves :g_clef)]
     (if (empty? rest)
       system
       ;; Here, we should parse the next system or measure
