@@ -176,7 +176,6 @@
 (defn compute-staff-line
   "Compute the virtual half-staff line on which a segment is"
   [segment refs min-staffline]
-  (println segment min-staffline)
   (let [[n d] refs
         half-staffline-size (/ (+ n d) 2)
         seg-pos (- min-staffline (/ (+ (:start-y segment) (:end-y segment)) 2))]
@@ -193,11 +192,9 @@
     (if (> (:end-y head) (apply max stafflines))
       ;; Below staff lines
       (let [n (- (compute-staff-line head refs (apply max stafflines)))]
-        (println "below" n)
         (nth (clef-seq clef :dec) n))
       ;; Above  staff lines
       (let [n (compute-staff-line head refs (apply min stafflines))]
-        (println "above" n)
         (nth (clef-seq clef :inc) n)))))
 
 (defn remove-accidental
@@ -377,7 +374,7 @@
           [:attributes
            [:divisions (str divisions)]
            [:key]
-           [:stafflines "1"]
+           [:staves "1"]
            (clef-to-musicxml (:clef system))]]
          (map note-to-musicxml (:notes system)))))
 
