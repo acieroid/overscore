@@ -104,7 +104,7 @@
   "Generate an infinite sequence of note (increasing or decreasing,
   depending on f, :inc or :dec), starting at step and octave"
   [step octave f]
-  (let [notes ["C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab" "A" "Bb" "B"]
+  (let [notes ["C" "D" "E" "F" "G" "A" "B"]
         rev-notes (concat ["C"] (reverse (drop 1 notes)))
         steps (drop-while #(not (= step %))
                           (cycle
@@ -130,10 +130,10 @@
   staff line, in the order given by f (:inc or :dec)"
   [clef f]
   (case clef
-    :g_clef (generate-seq "E" 3 f)
+    :g_clef (generate-seq "E" 4 f)
     :g_clef_8vb (generate-seq "E" 4 f)
-    :f_clef (generate-seq "G" 2 f)
-    :c_clef (generate-seq "D" 3 f)
+    :f_clef (generate-seq "G" 3 f)
+    :c_clef (generate-seq "D" 4 f)
     ;; Default to G2 clef
     (clef-seq :g_clef f)))
 
@@ -150,14 +150,31 @@
   it is on the first staff line, 0 will be returned. If it is on the
   second staff lines, 2 will be returned. If it is between those staff
   lines, 1 will be returned)."
-  [segment stafflines]
-  (println segment stafflines)
-  0)
+  [segment refs stafflines]
+  (let [center (/ (+ (:start-y segment) (:end-y segment)) 2)
+        [n d] refs
+        ;; Maximal distance to be considered "on a staff line"
+        max-distance (* n 2)
+        closest-staffline (reduce (fn [closest cur]
+                                    (if (< (abs (- center cur))
+                                           (abs (- center closest)))
+                                      cur
+                                      closest))
+                                  stafflines)
+        staffline-index (.indexOf stafflines closest-staffline)]
+    (if (< (abs (- closest-staffline center))
+           max-distance)
+      ;; On this staff line
+      (* 2 staffline-index)
+      (if (> (- closest-staffline center) 0)
+        ;; Below this staff line
+        (- (* 2 staffline-index) 1)
+        ;; Above this staff line
+        (+ (* 2 staffline-index) 1)))))
 
 (defn compute-staff-line
   "Compute the virtual half-staff line on which a segment is"
   [segment refs min-staffline]
-  (println segment refs min-staffline)
   (let [[n d] refs
         half-staffline-size (/ (+ n d) 2)
         seg-pos (- (/ (+ (:start-y segment) (:end-y segment)) 2)
@@ -170,7 +187,9 @@
   [head clef refs stafflines]
   (if (segment-in-staff head stafflines)
     ;; Within staff
-    (nth (clef-seq clef :inc) (segment-staff-line head stafflines))
+    (let [n (segment-staff-line head refs stafflines)]
+      (println head n)
+      (nth (clef-seq clef :inc) n))
     (if (< (:end-y head) (apply min stafflines))
       ;; Below staff lines
       (nth (clef-seq clef :dec)
