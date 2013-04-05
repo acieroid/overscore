@@ -52,8 +52,10 @@
         parse the <in> MusicXML file, and generate the song
         <name> in the clojure file <out>
 
-    play <file> <name>
-        play the song called <name> defined in the file <file>"))
+    play <file> <ns>/<name>
+        play the song called <name> defined in the file <file>, which
+        defines the namespace <ns>. If no namespace is defined, only
+        <name> can be given"))
 
 (defn call-if
   "Apply the last argument to the first one if its length is equal to
@@ -68,8 +70,11 @@
    (parse-musicxml in) (symbol name) out)
   (println "Generated song" name "in file" out))
 
+
 (defn play-song [file name]
-  (println "Not implemented yet"))
+  (load "overscore/notation")
+  (load-file file)
+  (eval (list 'overscore.notation/start (symbolname))))
 
 (defn -main [& args]
   (case (first args)
