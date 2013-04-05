@@ -161,24 +161,25 @@
                                       cur
                                       closest))
                                   stafflines)
-        staffline-index (.indexOf stafflines closest-staffline)]
+        ;; Staff line index from below
+        staffline-index (- 4 (.indexOf stafflines closest-staffline))]
     (if (< (abs (- closest-staffline center))
            max-distance)
       ;; On this staff line
       (* 2 staffline-index)
       (if (> (- closest-staffline center) 0)
-        ;; Below this staff line
-        (- (* 2 staffline-index) 1)
         ;; Above this staff line
-        (+ (* 2 staffline-index) 1)))))
+        (+ (* 2 staffline-index) 1)
+        ;; Below this staff line
+        (- (* 2 staffline-index) 1)))))
 
 (defn compute-staff-line
   "Compute the virtual half-staff line on which a segment is"
   [segment refs min-staffline]
+  (println segment min-staffline)
   (let [[n d] refs
         half-staffline-size (/ (+ n d) 2)
-        seg-pos (- (/ (+ (:start-y segment) (:end-y segment)) 2)
-                   min-staffline)]
+        seg-pos (- min-staffline (/ (+ (:start-y segment) (:end-y segment)) 2))]
     (round (/ seg-pos half-staffline-size))))
 
 (defn find-note-pitch
@@ -188,15 +189,16 @@
   (if (segment-in-staff head stafflines)
     ;; Within staff
     (let [n (segment-staff-line head refs stafflines)]
-      (println head n)
       (nth (clef-seq clef :inc) n))
-    (if (< (:end-y head) (apply min stafflines))
+    (if (> (:end-y head) (apply max stafflines))
       ;; Below staff lines
-      (nth (clef-seq clef :dec)
-           (- (compute-staff-line head refs (apply min stafflines))))
+      (let [n (- (compute-staff-line head refs (apply max stafflines)))]
+        (println "below" n)
+        (nth (clef-seq clef :dec) n))
       ;; Above  staff lines
-      (nth (clef-seq clef :inc)
-           (compute-staff-line head refs (apply max stafflines))))))
+      (let [n (compute-staff-line head refs (apply min stafflines))]
+        (println "above" n)
+        (nth (clef-seq clef :inc) n)))))
 
 (defn remove-accidental
   "Remove the accidental from a note step (eg. transforms A# into A)"
