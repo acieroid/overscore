@@ -2,6 +2,7 @@
 (ns overscore.semantic.semantic
   (:use clojure.java.io
         clojure.contrib.prxml
+        clojure.math.numeric-tower
         overscore.utils
         overscore.recognition.segmentation.segment))
 
@@ -156,8 +157,11 @@
 (defn compute-staff-line
   "Compute the virtual half-staff line on which a segment is"
   [segment refs min-staffline]
-  ;; TODO
-  0)
+  (let [[n d] refs
+        half-staffline-size (/ (+ n d) 2)
+        seg-pos (- (/ (+ (:start-y segment) (:end-y segment)) 2)
+                   min-staffline)]
+    (round (/ seg-pos half-staffline-size))))
 
 (defn find-note-pitch
   "Find the step of a note (eg. [A 4]) given its segment and the positions
