@@ -151,12 +151,13 @@
   second staff lines, 2 will be returned. If it is between those staff
   lines, 1 will be returned)."
   [segment stafflines]
-  ;; TODO
+  (println segment stafflines)
   0)
 
 (defn compute-staff-line
   "Compute the virtual half-staff line on which a segment is"
   [segment refs min-staffline]
+  (println segment refs min-staffline)
   (let [[n d] refs
         half-staffline-size (/ (+ n d) 2)
         seg-pos (- (/ (+ (:start-y segment) (:end-y segment)) 2)
@@ -170,12 +171,13 @@
   (if (segment-in-staff head stafflines)
     ;; Within staff
     (nth (clef-seq clef :inc) (segment-staff-line head stafflines))
-    (if (< (apply min stafflines))
+    (if (< (:end-y head) (apply min stafflines))
       ;; Below staff lines
-      (nth (clef-seq clef :dec) (- (compute-staff-line head refs (apply min stafflines))))
+      (nth (clef-seq clef :dec)
+           (- (compute-staff-line head refs (apply min stafflines))))
       ;; Above  staff lines
-      (nth (clef-seq clef :inc) (compute-staff-line head refs (apply max stafflines)))
-      )))
+      (nth (clef-seq clef :inc)
+           (compute-staff-line head refs (apply max stafflines))))))
 
 (defn remove-accidental
   "Remove the accidental from a note step (eg. transforms A# into A)"
