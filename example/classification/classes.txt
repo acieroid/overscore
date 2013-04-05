@@ -19,7 +19,7 @@
  [532 552 85 95     :beam]
  [573 593 43 59     :notehead_black]
  [553 576 85 99     :beam]
- [633 652 57 73     :beam]
+ [633 652 57 73     :notehead_black]
  [689 704 46 73     :eighth_rest]
  [726 745 92 108    :notehead_black]
  [742 756 50 92     :flag_1]
