@@ -24,7 +24,7 @@ $ lein2 run help
 Possible arguments:
     convert <in> <out>
         Convert symbols from Audiveris training set to png
-        images in the <out> directory
+        images in the <out> directory (from the <in> directory)
 
     preprocessing <in> <out> <out-ref>
         Preprocess the image <in>, saving the output image to
@@ -49,12 +49,23 @@ Possible arguments:
         (created by the convert step). Save the segments along
         with their classes in <out-classes>
 
+    semantics <in-classes> <in-refs> <in-stafflines> <out-xml>
+
+        Convert the recognized score to a MusicXML
+        document (<out-xml>), from the classes (<in-classes>) output
+        by the classification step, the reference lengths (<in-refs>)
+        output by the preprocessing step, and the staff lines
+        positions (<in-stafflines>, the .txt file) output by the
+        staffline step.
+
     generate <in> <out> <name>
         parse the <in> MusicXML file, and generate the song
         <name> in the clojure file <out>
 
-    play <file> <name>
-        play the song called <name> defined in the file <file>
+    play <file> <ns>/<name>
+        play the song called <name> defined in the file <file>, which
+        defines the namespace <ns>. If no namespace is defined, only
+        <name> can be given
 #+END_SRC
 
 Some example data is provided in the [[example]] directory, which
@@ -72,14 +83,25 @@ The image =/tmp/furelise.png= should (roughly) correspond to the image
 The other possible commands, on the example files, are:
 
 #+BEGIN_SRC shell
-# Stores the output in the same directory as the input
 $ lein2 run staffline example/preprocessed/furelise.png
+$ lein2 run segmentation example/staffline/furelise-0.png \
+            examples/preprocessed/refs.txt /tmp/segs.txt
+$ lein2 run classification training-set/ \
+                           example/staffline/furelise-0.png \
+                           example/segmentation/segs.txt \
+                           /tmp/classes.txt
+$ lein2 run semantics example/classification/classes.txt \
+                      example/preprocessed/refs.txt \
+                      example/staffline/furelise-0.txt \
+                      /tmp/furelise-0.xml
 
-$ lein2 run segmentation example/staffline/furelise-0.png examples/preprocessed/refs.txt /tmp/segs.txt
-
-$ lein2 run classification training-set/ example/staffline/furelise-0.png example/segmentation/segs.txt /tmp/classes.txt
+$ lein2 run generate examples/semantics/furelise-0.xml \
+                     /tmp/furelise-0.clj
+$ lein2 run play examples/generate/furelise-0.clj \
+                 furelise/furelise
 #+END_SRC
 
+Note: the =staffline= step stores its output in the same directory as its input.
 * How it works
 ** OMR
 The initial plan for the OMR part is documented in
