@@ -6,14 +6,15 @@
         overscore.preprocessing.preprocessing
         overscore.staffline.staffline
         overscore.recognition.segmentation.segmentation
-        overscore.recognition.classification.classification))
+        overscore.recognition.classification.classification
+        overscore.semantics.semantics))
 
 (defn usage []
   (println
    "Possible arguments:
     convert <in> <out>
         Convert symbols from Audiveris training set to png
-        images in the <out> directory
+        images in the <out> directory (from the <in> directory)
 
     preprocessing <in> <out> <out-ref>
         Preprocess the image <in>, saving the output image to
@@ -37,6 +38,15 @@
         using the training set at location <training-set>
         (created by the convert step). Save the segments along
         with their classes in <out-classes>
+
+    semantics <in-classes> <in-refs> <in-stafflines> <out-xml>
+
+        Convert the recognized score to a MusicXML
+        document (<out-xml>), from the classes (<in-classes>) output
+        by the classification step, the reference lengths (<in-refs>)
+        output by the preprocessing step, and the staff lines
+        positions (<in-stafflines>, the .txt file) output by the
+        staffline step.
 
     generate <in> <out> <name>
         parse the <in> MusicXML file, and generate the song
@@ -77,4 +87,6 @@
     (call-if (rest args) 3 segmentation)
     "classification"
     (call-if (rest args) 4 classification)
+    "semantics"
+    (call-if (rest args) 4 semantics)
     (usage)))

@@ -1,5 +1,5 @@
 ;;; Find the semantic of the score given the position and class of segments
-(ns overscore.semantic.semantic
+(ns overscore.semantics.semantics
   (:use clojure.java.io
         clojure.contrib.prxml
         clojure.math.numeric-tower
@@ -36,6 +36,19 @@
                           (sort #(compare (:start-y %1) (:start-y %2)) cur-group))
                    (:end-x seg)
                    [seg])))))))
+
+(defn group-extract
+  "Extract one element of a certain class from a group"
+  [group classes]
+  (let [is-among (fn [class classes]
+                   (not (empty? (filter #(= class %) classes))))]
+    (first (filter #(is-among (:class %) classes) group))))
+
+(defn group-contains
+  "Check if a group of segments contains a segment of a certain
+  class (among the given classes)"
+  [group classes]
+  (not (nil? (group-extract group classes))))
 
 (defn refine-groups
   "Refine the groups by grouping pre and post symbols with the
@@ -86,19 +99,6 @@
                        (conj! res (first groups))
                        (conj! (conj! res cur) (first groups)))
                      []))))))))
-
-(defn group-extract
-  "Extract one element of a certain class from a group"
-  [group classes]
-  (let [is-among (fn [class classes]
-                   (not (empty? (filter #(= class %) classes))))]
-    (first (filter #(is-among (:class %) classes) group))))
-
-(defn group-contains
-  "Check if a group of segments contains a segment of a certain
-  class (among the given classes)"
-  [group classes]
-  (not (nil? (group-extract group classes))))
 
 (defn generate-seq
   "Generate an infinite sequence of note (increasing or decreasing,
@@ -378,7 +378,7 @@
    [:part {:id "P1"}
     (system-to-musicxml score)]])
 
-(defn semantic
+(defn semantics
   "Find the semantic of a score given the notes positions and classes"
   [in-classes in-refs in-stafflines out-xml]
   (let [segments-vectors (read-vector in-classes)
