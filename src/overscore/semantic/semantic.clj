@@ -7,7 +7,7 @@
         overscore.recognition.segmentation.segment))
 
 (defrecord score-system [clef time notes])
-(defrecord score-note [step octave duration])
+(defrecord score-note [step accidental octave duration])
 ;; Default division
 (def divisions 64)
 
@@ -197,24 +197,10 @@
       (let [n (compute-staff-line head refs (apply min stafflines))]
         (nth (clef-seq clef :inc) n)))))
 
-(defn remove-accidental
-  "Remove the accidental from a note step (eg. transforms A# into A)"
-  [step]
-  (subs step 0 1))
-
 (defn interpret-note
   "Convert a group of symbols to a note"
-  [pre beam head post clef refs stafflines]
+  [accidental beam head post clef refs stafflines]
   (let [[step octave] (find-note-pitch head clef refs stafflines)
-        step-with-accidental (if (= pre :sharp)
-                               (str step "#")
-                               (if (= pre :flat)
-                                 (str step "b")
-                                 ;; :natural, but we don't handle key
-                                 ;; signatures so we ignore natural
-                                 ;; symbols if the corresponding note
-                                 ;; is not a sharp/flat by "default"
-                                 (remove-accidental step)))
         duration (if (and
                       (= (:class head) :notehead_black)
                       (or (= beam :beam) (= beam :beam_hook)
@@ -231,7 +217,7 @@
                          4
                          ;; Defaults to black note
                          1))))]
-    (->score-note step-with-accidental octave duration)))
+    (->score-note step accidental octave duration)))
 
 (defn parse
   "Parse a non-terminal from the groups of note"
@@ -264,7 +250,7 @@
                [(cons note notes) groups''])
       :note (if (group-contains (first groups) rests)
               (let [seg (group-extract (first groups) rests)]
-                [(->score-note :rest 0
+                [(->score-note :rest :none 0
                                (case (:class seg)
                                  :quarter_rest 1
                                  :eighth_rest 1/2
@@ -361,7 +347,13 @@
      [:rest]
      [:pitch
       [:step (:step note)]
-      [:octave (str (:octave note))]])
+      [:octave (str (:octave note))]
+      (case (:accidental note)
+        :sharp [:alter "1"]
+        :flat [:alter "-1"]
+        :natural nil ; no alteration
+        :none nil)
+])
    [:duration (str (* divisions (:duration note)))]])
 
 (defn system-to-musicxml
