@@ -101,7 +101,7 @@
 
 (defn generate-seq
   "Generate an infinite sequence of note (increasing or decreasing,
-  depending on f), starting at step and octave"
+  depending on f, :inc or :dec), starting at step and octave"
   [step octave f]
   (let [notes ["C" "C#" "D" "Eb" "E" "F" "F#" "G" "Ab" "A" "Bb" "B"]
         rev-notes (concat ["C"] (reverse (drop 1 notes)))
@@ -124,25 +124,73 @@
                                 @octave)))]
     (map (fn [step octave] [step octave]) steps octaves)))
 
-(defn find-note-step
-  "Find the step of a note (eg. A) given its segment and the positions
-  of the staff lines"
-  [head clef refs staves]
+(defn clef-seq
+  "Generate the notes sequence that will be played from the first
+  staff line, in the order given by f (:inc or :dec)"
+  [clef f]
+  (case clef
+    :g_clef (generate-seq "E" 3 f)
+    :g_clef_8vb (generate-seq "E" 4 f)
+    :f_clef (generate-seq "G" 2 f)
+    :c_clef (generate-seq "D" 3 f)
+    ;; Default to G2 clef
+    (clef-seq :g_clef f)))
+
+(defn segment-in-staff
+  "Check if a segment is in this staff space, or if it is below or
+  above the staff lines"
+  [segment stafflines]
+  (and
+   (> (:end-y segment) (apply min stafflines))
+   (< (:start-y segment) (apply max stafflines))))
+
+(defn segment-staff-line
+  "Return the index of the half-staff line on which a segment is (if
+  it is on the first staff line, 0 will be returned. If it is on the
+  second staff lines, 2 will be returned. If it is between those staff
+  lines, 1 will be returned)."
+  [segment stafflines]
   ;; TODO
-  ["A" 4])
+  0)
+
+(defn compute-staff-line
+  "Compute the virtual half-staff line on which a segment is"
+  [segment refs min-staffline]
+  ;; TODO
+  0)
+
+(defn find-note-pitch
+  "Find the step of a note (eg. [A 4]) given its segment and the positions
+  of the staff lines"
+  [head clef refs stafflines]
+  (if (segment-in-staff head stafflines)
+    ;; Within staff
+    (nth (clef-seq clef :inc) (segment-staff-line head stafflines))
+    (if (< (apply min stafflines))
+      ;; Below staff lines
+      (nth (clef-seq clef :dec) (- (compute-staff-line head refs (apply min stafflines))))
+      ;; Above  staff lines
+      (nth (clef-seq clef :inc) (compute-staff-line head refs (apply max stafflines)))
+      )))
+
+(defn remove-accidental
+  "Remove the accidental from a note step (eg. transforms A# into A)"
+  [step]
+  (subs step 0 1))
 
 (defn interpret-note
   "Convert a group of symbols to a note"
-  [pre beam head post clef refs staves]
-  (let [[step octave] (find-note-step clef head refs staves)
+  [pre beam head post clef refs stafflines]
+  (let [[step octave] (find-note-pitch head clef refs stafflines)
         step-with-accidental (if (= pre :sharp)
-                                (str step "#")
-                                (if (= pre :flat)
-                                  (str step "b")
-                                  ;; :natural, but we don't handle key
-                                  ;; signatures so we ignore natural
-                                  ;; symbols.
-                                  step))
+                               (str step "#")
+                               (if (= pre :flat)
+                                 (str step "b")
+                                 ;; :natural, but we don't handle key
+                                 ;; signatures so we ignore natural
+                                 ;; symbols if the corresponding note
+                                 ;; is not a sharp/flat by "default"
+                                 (remove-accidental step)))
         duration (if (and
                       (= (:class head) :notehead_black)
                       (or (= beam :beam) (= beam :beam_hook)
@@ -163,7 +211,7 @@
 
 (defn parse
   "Parse a non-terminal from the groups of note"
-  [groups symbol refs staves clef]
+  [groups symbol refs stafflines clef]
   (let [rests [:quarter_rest :eighth_rest :one_16th_rest]
         accidentals [:sharp :flat :natural]
         dots [:dot_set]
@@ -180,14 +228,14 @@
         clef-default :g_clef
         notes-first (concat accidentals rests beams noteheads)]
     (case symbol
-      :system (let [[clef groups'] (parse groups :clef refs staves clef)
-                    [time groups''] (parse groups' :time refs staves clef)
-                    [notes rest] (parse groups'' :notes refs staves clef)]
+      :system (let [[clef groups'] (parse groups :clef refs stafflines clef)
+                    [time groups''] (parse groups' :time refs stafflines clef)
+                    [notes rest] (parse groups'' :notes refs stafflines clef)]
                 [(->score-system clef time notes) rest])
-      :notes (let [[note groups'] (parse groups :note refs staves clef)
+      :notes (let [[note groups'] (parse groups :note refs stafflines clef)
                    [notes groups'']
                    (if (group-contains (first groups') notes-first)
-                     (parse groups' :notes refs staves clef)
+                     (parse groups' :notes refs stafflines clef)
                      [[] groups'])]
                [(cons note notes) groups''])
       :note (if (group-contains (first groups) rests)
@@ -198,10 +246,11 @@
                                  :eighth_rest 1/2
                                  :one_16th_rest 1/4))
                  (rest groups)])
-              (let [[pre _] (parse groups :pre refs staves clef)
-                    [[beam head] _] (parse groups :note_body refs staves clef)
-                    [post _] (parse groups :post refs staves clef)]
-                [(interpret-note pre beam head post refs staves) (rest groups)]))
+              (let [[pre _] (parse groups :pre refs stafflines clef)
+                    [[beam head] _] (parse groups :note_body refs stafflines clef)
+                    [post _] (parse groups :post refs stafflines clef)]
+                [(interpret-note pre beam head post clef refs stafflines)
+                 (rest groups)]))
       :pre (if (group-contains (first groups) accidentals)
              (let [seg (group-extract (first groups) accidentals)]
                [(:class seg) groups])
@@ -210,9 +259,9 @@
               ;; TODO: a group can contain a flag and a dot
               (let [seg (group-extract (first groups) dots)]
                 [(:class seg) groups])
-              (parse groups :flag refs staves clef))
-      :note_body (let [[beam _] (parse groups :beam refs staves clef)
-                       [notehead _] (parse groups :notehead refs staves clef)]
+              (parse groups :flag refs stafflines clef))
+      :note_body (let [[beam _] (parse groups :beam refs stafflines clef)
+                       [notehead _] (parse groups :notehead refs stafflines clef)]
                    [[beam notehead] groups])
       :time (if (group-contains (first groups) times)
               (let [seg (group-extract (first groups) times)]
@@ -237,8 +286,8 @@
 
 (defn interpret
   "Interpret the groups of symbols as notes that forms a score"
-  [groups refs staves]
-  (let [[system rest] (parse groups :system refs staves :g_clef)]
+  [groups refs stafflines]
+  (let [[system rest] (parse groups :system refs stafflines :g_clef)]
     (if (empty? rest)
       system
       ;; Here, we should parse the next system or measure
@@ -266,6 +315,9 @@
 
 (defn clef-to-musicxml
   [clef]
+  ;; Note: there is no distinction between the different types of clef
+  ;; with the same symbols (thus, this function might be false if the
+  ;; score use non common clefs)
   (let [[sign line]
         (if (nil? clef)
           ["G" 2] ;; G clef by default
@@ -298,7 +350,7 @@
           [:attributes
            [:divisions (str divisions)]
            [:key]
-           [:staves "1"]
+           [:stafflines "1"]
            (clef-to-musicxml (:clef system))]]
          (map note-to-musicxml (:notes system)))))
 
@@ -312,13 +364,13 @@
 
 (defn semantic
   "Find the semantic of a score given the notes positions and classes"
-  [in-classes in-refs in-staves out-xml]
+  [in-classes in-refs in-stafflines out-xml]
   (let [segments-vectors (read-vector in-classes)
         refs (read-vector in-refs)
-        staves (read-vector in-staves)
+        stafflines (read-vector in-stafflines)
         segments (map to-classified-segment segments-vectors)
         groups (refine-groups (group-vertically segments))
-        score (interpret groups refs staves)
+        score (interpret groups refs stafflines)
         musicxml (to-musicxml score)]
     (spit
      out-xml
