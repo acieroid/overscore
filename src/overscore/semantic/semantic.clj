@@ -35,6 +35,56 @@
                    (:end-x seg)
                    [seg])))))))
 
+(defn refine-groups
+  "Refine the groups by grouping pre and post symbols with the
+  neighbour group containing a notehead, if they are not already in a
+  group with a note head"
+  [groups]
+  (let [pre [:sharp :flat :natural :beam :beam_hook]
+        post [:flag_1 :flag_1_up :flag_2 :flag_2_up :dot_set]
+        notehead [:notehead_black :notehead_black_2 :notehead_black_3
+                  :notehead_void :notehead_void_2
+                  :whole_note :whole_note_2]]
+    (loop [groups groups
+           res (transient [])
+           cur []]
+      (if (empty? groups)
+        (persistent! (conj! res cur))
+        (if (group-contains (first groups) notehead)
+          ;; Notehead
+          (if (group-contains cur notehead)
+            ;; Already contains a notehead, end of this group
+            (recur (rest groups)
+                   (conj! res cur)
+                   (first groups))
+            ;; Add the notehead to this group
+            (recur (rest groups)
+                   res
+                   (concat (first groups) cur)))
+          (if (group-contains (first groups) post)
+            ;; Post, add to the current group
+            (recur (rest groups)
+                   res
+                   (concat (first groups) cur))
+            (if (group-contains (first groups) pre)
+              ;; Pre
+              (if (group-contains cur notehead)
+                ;; Pre after a notehead, create a new group
+                (recur (rest groups)
+                       (conj! res cur)
+                       (first groups))
+                ;; Pre before a notehead, add it to the current  group
+                (recur (rest groups)
+                       res
+                       (concat (first groups) cur)))
+              ;; No pre, post or notehead, finish the current group and
+              ;; add this one too
+              (recur (rest groups)
+                     (if (empty? cur)
+                       (conj! res (first groups))
+                       (conj! (conj! res cur) (first groups)))
+                     []))))))))
+
 (defn group-extract
   "Extract one element of a certain class from a group"
   [group classes]
@@ -51,13 +101,14 @@
 (defn interpret-note
   "Convert a group of symbols to a note"
   [pre beam head post refs staves]
+  (println pre beam head post)
   ;; TODO
   (->score-note "A" 4 1))
 
 (defn parse
   "Parse a non-terminal from the groups of note"
   [groups symbol refs staves]
-  (let [rests [:quarter_rest :height_rest :one_16th_rest]
+  (let [rests [:quarter_rest :eighth_rest :one_16th_rest]
         accidentals [:sharp :flat :natural]
         dots [:dot_set]
         times [:common_time :cut_time :time_four :time_four_four :time_six_eight
@@ -71,7 +122,6 @@
         time-default :time_four_four
         clef-default :g_clef
         notes-first (concat accidentals rests beams noteheads)]
-    (println symbol (first groups))
     (case symbol
       :system (let [[clef groups'] (parse groups :clef refs staves)
                     [time groups''] (parse groups' :time refs staves)
@@ -79,29 +129,28 @@
                 [(->score-system clef time notes) rest])
       :notes (let [[note groups'] (parse groups :note refs staves)
                    [notes groups'']
-                   (if (group-contains (first groups) notes-first)
+                   (if (group-contains (first groups') notes-first)
                      (parse groups' :notes refs staves)
                      [[] groups'])]
                [(cons note notes) groups''])
       :note (if (group-contains (first groups) rests)
               (let [seg (group-extract (first groups) rests)]
                 [(->score-rest (:class seg)) (rest groups)])
-              (let [[pre groups'] (parse groups :pre refs staves)
-                    [[beam head] groups''] (parse groups' :note_body refs staves)
-                    [post groups'''] (parse groups'' :post refs staves)]
-                ; TODO: interpret pitch from vertical position
-                [(interpret-note pre beam head post refs staves) groups''']))
+              (let [[pre _] (parse groups :pre refs staves)
+                    [[beam head] _] (parse groups :note_body refs staves)
+                    [post _] (parse groups :post refs staves)]
+                [(interpret-note pre beam head post refs staves) (rest groups)]))
       :pre (if (group-contains (first groups) accidentals)
              (let [seg (group-extract (first groups) accidentals)]
-               [(:class seg) (rest groups)])
+               [(:class seg) groups])
              [:none groups])
       :post (if (group-contains (first groups) dots)
               (let [seg (group-extract (first groups) dots)]
-                [(:class seg) (rest groups)])
+                [(:class seg) groups])
               (parse groups :flag refs staves))
-      :note_body (let [[beam groups'] (parse groups :beam refs staves)
-                       [notehead groups''] (parse groups' :notehead refs staves)]
-                   [[beam notehead] groups''])
+      :note_body (let [[beam _] (parse groups :beam refs staves)
+                       [notehead _] (parse groups :notehead refs staves)]
+                   [[beam notehead] groups])
       :time (if (group-contains (first groups) times)
               (let [seg (group-extract (first groups) times)]
                 [(:class seg) (rest groups)])
@@ -129,8 +178,8 @@
   (let [[system rest] (parse groups :system refs staves)]
     (if (empty? rest)
       system
-      ;; TODO
-      (do (println (first rest))
+      ;; Here, we should parse the next system or measure
+      (do (println "Remaining: " (first rest))
           system))))
 
 (defn time-to-musicxml
@@ -203,11 +252,9 @@
         refs (read-vector in-refs)
         staves (read-vector in-staves)
         segments (map to-classified-segment segments-vectors)
-        sorted (group-vertically segments)
-        score (interpret sorted refs staves)
+        groups (refine-groups (group-vertically segments))
+        score (interpret groups refs staves)
         musicxml (to-musicxml score)]
-    (println musicxml)
-    (prxml musicxml)
     (spit
      out-xml
      (with-out-str
