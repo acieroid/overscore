@@ -6,8 +6,9 @@
         overscore.recognition.segmentation.segment))
 
 (defrecord score-system [clef time notes])
-(defrecord score-rest [type])
 (defrecord score-note [step octave duration])
+;; Default division
+(def divisions 64)
 
 (defrecord classified-segment [start-x end-x start-y end-y class])
 (defn to-classified-segment
@@ -98,12 +99,42 @@
   [group classes]
   (not (nil? (group-extract group classes))))
 
+(defn find-note-step
+  "Find the step of a note (eg. A) given its segment and the positions
+  of the staff lines"
+  [head refs staves]
+  ;; TODO
+  ["A" 4])
+
 (defn interpret-note
   "Convert a group of symbols to a note"
   [pre beam head post refs staves]
-  (println pre beam head post)
-  ;; TODO
-  (->score-note "A" 4 1))
+  (let [[step octave] (find-note-step head refs staves)
+        step-with-accidental (if (= pre :sharp)
+                                (str step "#")
+                                (if (= pre :flat)
+                                  (str step "b")
+                                  ;; :natural, but we don't handle key
+                                  ;; signatures so we ignore natural
+                                  ;; symbols.
+                                  step))
+        duration (if (and
+                      (= (:class head) :notehead_black)
+                      (or (= beam :beam) (= beam :beam_hook)
+                          (= post :flag_1) (= post :flag_1_up)))
+                   ;; Here, a duration of 1 means a black note. It
+                   ;; will be converted later to a duration compatible
+                   ;; with MusicXML's duration.
+                   1/2
+                   (if (or (= post :flag_2) (= post :flag_2_up))
+                     1/4
+                     (if (= (:class head) :notehead_void)
+                       2
+                       (if (= (:class head) :whole_note)
+                         4
+                         ;; Defaults to black note
+                         1))))]
+    (->score-note step-with-accidental octave duration)))
 
 (defn parse
   "Parse a non-terminal from the groups of note"
@@ -114,6 +145,7 @@
         times [:common_time :cut_time :time_four :time_four_four :time_six_eight
                :time_three :time_three_four :time_two :time_two_four]
         clefs [:g_clef :g_clef_8vb :f_clef :c_clef]
+        ;; Note: the _2 and _3 note heads are not handled
         noteheads [:notehead_black :notehead_black_2 :notehead_black_3
                    :notehead_void :notehead_void_2
                    :whole_note :whole_note_2]
@@ -135,7 +167,12 @@
                [(cons note notes) groups''])
       :note (if (group-contains (first groups) rests)
               (let [seg (group-extract (first groups) rests)]
-                [(->score-rest (:class seg)) (rest groups)])
+                [(->score-note :rest 0
+                               (case (:class seg)
+                                 :quarter_rest 1
+                                 :eighth_rest 1/2
+                                 :one_16th_rest 1/4))
+                 (rest groups)])
               (let [[pre _] (parse groups :pre refs staves)
                     [[beam head] _] (parse groups :note_body refs staves)
                     [post _] (parse groups :post refs staves)]
@@ -145,6 +182,7 @@
                [(:class seg) groups])
              [:none groups])
       :post (if (group-contains (first groups) dots)
+              ;; TODO: a group can contain a flag and a dot
               (let [seg (group-extract (first groups) dots)]
                 [(:class seg) groups])
               (parse groups :flag refs staves))
@@ -218,10 +256,12 @@
 (defn note-to-musicxml
   [note]
   [:note
-   [:pitch
-    [:step (:step note)]
-    [:octave (str (:octave note))]]
-   [:duration (str (:duration note))]])
+   (if (= (:step note) :rest)
+     [:rest]
+     [:pitch
+      [:step (:step note)]
+      [:octave (str (:octave note))]])
+   [:duration (str (* divisions (:duration note)))]])
 
 (defn system-to-musicxml
   "Convert a system to MusicXML data"
@@ -231,7 +271,7 @@
         (concat
          [:measure {:number "1"}
           [:attributes
-           [:divisions "1"]
+           [:divisions (str divisions)]
            [:key]
            [:staves "1"]
            (clef-to-musicxml (:clef system))]]
