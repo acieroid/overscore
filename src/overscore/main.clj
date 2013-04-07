@@ -74,7 +74,7 @@
 (defn play-song [file name]
   (load "overscore/notation")
   (load-file file)
-  (eval (list 'overscore.notation/start (symbolname))))
+  (eval (list 'overscore.notation/start (symbol name))))
 
 (defn -main [& args]
   (case (first args)

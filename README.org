@@ -6,6 +6,9 @@ and plays them using [[http://overtone.github.com/][Overtone]]. Overscore consis
   - a MusicXML parser that compiles MusicXML files into Clojure files
   - multiple helper macros and functions built over Overtone to have a
     system more adapted to encode classical music
+
+This project is the result of work done at the ULB (Université Libre
+de Bruxelles), for the course PROJ-H-402.
 * Dependencies
 Aside from the dependencies listed in the =project.clj=, OpenCV is
 also needed for the classification step, and the classifier (which is
