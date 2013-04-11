@@ -80,7 +80,7 @@ $ lein2 run preprocessing example/input/furelise.png /tmp/furelise.png /tmp/refs
 #+END_SRC
 
 The image =/tmp/furelise.png= should (roughly) correspond to the image
-[[example/preprocessed/furelise.png]], and the file =/tmp/refs.txt= to
+=example/preprocessed/furelise.png=, and the file =/tmp/refs.txt= to
 [[example/preprocessed/refs.txt]].
 
 The other possible commands, on the example files, are:
