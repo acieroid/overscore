@@ -97,7 +97,6 @@ $ lein2 run semantics example/classification/classes.txt \
                       example/preprocessed/refs.txt \
                       example/staffline/furelise-0.txt \
                       /tmp/furelise-0.xml
-
 $ lein2 run generate examples/semantics/furelise-0.xml \
                      /tmp/furelise-0.clj
 $ lein2 run play examples/generate/furelise-0.clj \
