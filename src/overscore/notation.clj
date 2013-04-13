@@ -53,7 +53,7 @@
     ;; The instrument should take a midi note as input. If it needs a
     ;; frequency, it should use midi->hz to convert it
     (let [duration-ms (state-beat-time state duration)]
-      (if (not (= n :rest)) ; if it's a rest, we just doesn't play anything
+      (if (not (= n :rest)) ; if it's a rest, we just don't play anything
         (at time
             (let [id (inst (note n))]
               (at (+ time duration-ms)
