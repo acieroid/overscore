@@ -1,4 +1,4 @@
-(ns furelise (:use [overscore.notation] [overtone.inst.synth]))
+(ns furelise (:use [overscore.notation] [overtone.inst.sampled-piano]))
 
 (defprog
  P1
@@ -34,5 +34,5 @@
    (play :D5 1/2)
    (play :C5 1/2))))
 
-(defsong furelise {:time-signature [4 4], :tempo 80} [P1 pad])
+(defsong furelise {:time-signature [4 4], :tempo 80} [P1 sampled-piano])
 

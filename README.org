@@ -98,7 +98,8 @@ $ lein2 run semantics example/classification/classes.txt \
                       example/staffline/furelise-0.txt \
                       /tmp/furelise-0.xml
 $ lein2 run generate example/semantics/furelise-0.xml \
-                     /tmp/furelise-0.clj
+                     /tmp/furelise-0.clj \
+                     furelise
 $ lein2 run play example/generate/furelise-0.clj \
                  furelise/furelise
 #+END_SRC

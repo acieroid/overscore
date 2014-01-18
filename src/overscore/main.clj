@@ -70,7 +70,6 @@
    (parse-musicxml in) (symbol name) out)
   (println "Generated song" name "in file" out))
 
-
 (defn play-song [file name]
   (load "overscore/notation")
   (load-file file)
