@@ -483,6 +483,10 @@ SuperCollider synth server (while apparently this limitation could be
 changed). This might results in bugs ("No more IDs!" message) when
 stopping a song when it has not been entirely playing, and relaunching
 it later. See [[http://groups.google.com/group/overtone/tree/browse_frm/month/2012-10/8adf6710630c6987?rnum=51&_done=%2Fgroup%2Fovertone%2Fbrowse_frm%2Fmonth%2F2012-10%3F][here]] for more explanations.
+* License
+Copyright (C) 2013 Quentin Stievenart
+
+Distributed under the Eclipse Public License, the same as Clojure.
 * Bibliography
 The papers cited in this documentation are given in this section. For
 more papers about the topic of OMR, see =doc/design/design.pdf=.
