@@ -19,6 +19,8 @@ cd src/overscore/recognition/classification
 g++ opencv_knn.cpp -o opencv_knn `pkg-config opencv --libs --cflags`
 #+END_SRC
 
+The Gamera python plugin is also needed for staffline detection.
+
 * Usage
 The application can be launched using [[http://leiningen.org/][leiningen]]:
 

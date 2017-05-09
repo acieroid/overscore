@@ -1,6 +1,6 @@
 ;;; Do the whole segmentation process
 (ns overscore.recognition.segmentation.segmentation
-  (:use overscore.tools.files
+  (:use overscore.utils
         overscore.recognition.segmentation.segment
         overscore.recognition.segmentation.level0
         overscore.recognition.segmentation.notehead
