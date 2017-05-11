@@ -27,7 +27,7 @@
                         (map #(create-level2-segments img % d n)
                              (apply concat
                                     (map #(create-level1-segments
-                                           img % (detect-notes img% d n))
+                                           img % (detect-notes img % d n))
                                          l0))))
         ;; The other L2 segments
         l2-symbols (apply concat
